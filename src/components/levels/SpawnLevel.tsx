@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { PixelButton } from "@/components/PixelButton";
 import { TypingEffect } from "@/components/TypingEffect";
+import { HeroScene } from "@/components/pixel-art";
 import { site } from "@/content/site";
 
 export function SpawnLevel() {
@@ -30,11 +31,28 @@ export function SpawnLevel() {
 
   return (
     <motion.div
-      className="text-center lg:text-left"
+      className="grid lg:grid-cols-2 gap-8 items-center"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
+      {/* Hero pixel art scene - hidden on mobile, shown on desktop */}
+      <motion.div
+        className="hidden lg:block order-2"
+        variants={itemVariants}
+      >
+        <div className="relative">
+          <HeroScene className="rounded-lg overflow-hidden border-2 border-[var(--border)] shadow-[0_0_30px_rgba(78,205,196,0.15)]" />
+          {/* Decorative corners */}
+          <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-[var(--accent)]" />
+          <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-[var(--accent)]" />
+          <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-[var(--accent)]" />
+          <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-[var(--accent)]" />
+        </div>
+      </motion.div>
+
+      {/* Text content */}
+      <div className="text-center lg:text-left order-1">
       <motion.h1
         className="font-[family-name:var(--font-pixelify-sans)] text-4xl sm:text-5xl lg:text-6xl text-[var(--text)] mb-4"
         variants={itemVariants}
@@ -81,6 +99,7 @@ export function SpawnLevel() {
       >
         Based in the Bay Area. I&apos;m always happy to meet thoughtful builders.
       </motion.p>
+      </div>
     </motion.div>
   );
 }

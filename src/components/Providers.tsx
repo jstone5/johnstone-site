@@ -8,6 +8,7 @@ import { AchievementToast } from "./AchievementToast";
 import { LevelUpOverlay } from "./LevelUpOverlay";
 import { EasterEggs } from "./EasterEggs";
 import { XPBar } from "./XPBar";
+import { FloatingCompanion } from "./pixel-art";
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
@@ -19,6 +20,7 @@ export function Providers({ children }: { children: ReactNode }) {
           <LevelUpOverlay />
           <EasterEggs />
           <XPBar />
+          <FloatingCompanion />
         </XPProvider>
       </AchievementProvider>
     </SoundProvider>

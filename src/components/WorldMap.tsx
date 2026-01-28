@@ -1,42 +1,53 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type ComponentType } from "react";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import { levels, type LevelId } from "@/content/site";
 import { useIsClient } from "@/lib/hooks";
 import { useSound } from "@/contexts/SoundContext";
 import { useXP, XP_REWARDS } from "@/contexts/XPContext";
+import {
+  SpawnIcon,
+  KnowledgeIcon,
+  QuestIcon,
+  ArchiveIcon,
+  TreasureIcon,
+  MessageIcon,
+} from "@/components/pixel-art";
+
+// Icon component type
+type IconComponent = ComponentType<{ size?: number; className?: string; animated?: boolean }>;
 
 // World map location metadata
-const LOCATIONS: Record<LevelId, { name: string; icon: string; description: string }> = {
+const LOCATIONS: Record<LevelId, { name: string; Icon: IconComponent; description: string }> = {
   spawn: {
     name: "Spawn Point",
-    icon: "🏠",
+    Icon: SpawnIcon,
     description: "Where every journey begins",
   },
   about: {
     name: "Knowledge Tower",
-    icon: "🏰",
+    Icon: KnowledgeIcon,
     description: "Learn about the adventurer",
   },
   work: {
     name: "Quest Board",
-    icon: "📜",
+    Icon: QuestIcon,
     description: "View completed quests",
   },
   writing: {
     name: "Archive Library",
-    icon: "📚",
+    Icon: ArchiveIcon,
     description: "Collected writings and thoughts",
   },
   links: {
     name: "Treasure Vault",
-    icon: "💎",
+    Icon: TreasureIcon,
     description: "Curated resources",
   },
   subscribe: {
     name: "Message Tower",
-    icon: "🗼",
+    Icon: MessageIcon,
     description: "Stay connected",
   },
 };
@@ -202,9 +213,9 @@ function DesktopWorldMap({
                 {/* Location icon */}
                 <motion.div
                   className={`
-                    relative w-10 h-10 flex items-center justify-center rounded-lg border-2 text-xl
+                    relative w-12 h-12 flex items-center justify-center rounded-lg border-2
                     ${isActive
-                      ? "border-[var(--accent)] bg-[var(--accent)]/20"
+                      ? "border-[var(--accent)] bg-[var(--accent)]/10"
                       : isVisited
                       ? "border-[var(--accent)]/50 bg-[var(--panel)]"
                       : "border-[var(--border)] bg-[var(--panel)] grayscale opacity-50"
@@ -215,7 +226,7 @@ function DesktopWorldMap({
                   } : {}}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
-                  {location.icon}
+                  <location.Icon size={32} animated={isActive} />
 
                   {/* Active indicator */}
                   {isActive && (
@@ -320,7 +331,9 @@ function MobileWorldMap({
                       }
                     `}
                   >
-                    <span className="text-2xl">{location.icon}</span>
+                    <div className="flex justify-center">
+                      <location.Icon size={28} animated={isActive} />
+                    </div>
                     <p className={`
                       text-xs mt-1 font-[family-name:var(--font-pixelify-sans)]
                       ${isActive ? "text-[var(--accent)]" : "text-[var(--muted)]"}
@@ -342,11 +355,11 @@ function MobileWorldMap({
           className="w-full flex items-center gap-3 p-3"
         >
           <motion.div
-            className="w-10 h-10 flex items-center justify-center bg-[var(--accent)]/20 border border-[var(--accent)] rounded-lg text-xl"
+            className="w-12 h-12 flex items-center justify-center bg-[var(--accent)]/10 border border-[var(--accent)] rounded-lg"
             animate={prefersReducedMotion ? {} : { scale: [1, 1.05, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            {activeLocation.icon}
+            <activeLocation.Icon size={32} animated />
           </motion.div>
 
           <div className="flex-1 text-left">

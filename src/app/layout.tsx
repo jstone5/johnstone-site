@@ -7,7 +7,7 @@ import { Providers } from "@/components/Providers";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { ScrollToTop } from "@/components/ScrollToTop";
-import { ParticleField } from "@/components/ParticleField";
+import { AmbientBackground } from "@/components/pixel-art";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -55,7 +55,7 @@ export default function RootLayout({
         className={`${spaceGrotesk.variable} ${pixelifySans.variable} antialiased scanlines noise`}
       >
         <Providers>
-          <ParticleField />
+          <AmbientBackground variant="magical" density="medium" />
           <Nav />
           <main className="relative z-10">{children}</main>
           <Footer />
