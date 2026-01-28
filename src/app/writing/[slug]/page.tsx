@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getPosts, getPostBySlug } from "@/lib/substack";
 import { PostContent } from "@/components/PostContent";
 import { PixelButton } from "@/components/PixelButton";
+import { PostTracker } from "@/components/PostTracker";
 import { site } from "@/content/site";
 
 export const revalidate = 3600; // Revalidate every hour
@@ -55,7 +56,8 @@ export default async function PostPage({ params }: PageProps) {
   const hasFullContent = post.content && post.content.length > 200;
 
   return (
-    <div className="min-h-screen pt-14 lg:pl-24 pb-16 lg:pb-0">
+    <div className="min-h-screen pt-14 lg:pl-48 pb-32 lg:pb-16">
+      <PostTracker slug={slug} title={post.title} />
       <article className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
         {/* Back link */}
         <Link

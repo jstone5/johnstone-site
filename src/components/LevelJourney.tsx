@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useReducedMotion } from "framer-motion";
 import { levels, type LevelId } from "@/content/site";
 import { LevelSection } from "./LevelSection";
-import { LevelTracker } from "./LevelTracker";
+import { WorldMap } from "./WorldMap";
 import { StartOverlay } from "./StartOverlay";
 import { TransitionOverlay } from "./TransitionOverlay";
 import { SpawnLevel } from "./levels/SpawnLevel";
@@ -22,6 +22,7 @@ interface LevelJourneyProps {
 
 export function LevelJourney({ featuredPosts = [] }: LevelJourneyProps) {
   const [activeLevel, setActiveLevel] = useState<LevelId>("spawn");
+  const [visitedLevels, setVisitedLevels] = useState<Set<LevelId>>(new Set(["spawn"]));
   const [transitionActive, setTransitionActive] = useState(false);
   const sectionRefs = useRef<Map<LevelId, HTMLElement>>(new Map());
   const prefersReducedMotion = useReducedMotion();
@@ -76,11 +77,15 @@ export function LevelJourney({ featuredPosts = [] }: LevelJourneyProps) {
         }
 
         if (activeSection) {
+          const newSection = activeSection; // Capture for closures
           setTransitionActive(true);
-          setActiveLevel(activeSection);
-          visitLevel(activeSection); // Track for achievements
+          setActiveLevel(newSection);
+          setVisitedLevels((prev) => new Set([...prev, newSection]));
+          visitLevel(newSection); // Track for achievements
           if (typeof window !== "undefined") {
-            history.replaceState(null, "", `#${activeSection}`);
+            history.replaceState(null, "", `#${newSection}`);
+            // Dispatch event for Easter eggs tracking
+            window.dispatchEvent(new CustomEvent("levelchange", { detail: { level: newSection } }));
           }
           setTimeout(() => setTransitionActive(false), 50);
         }
@@ -176,9 +181,9 @@ export function LevelJourney({ featuredPosts = [] }: LevelJourneyProps) {
     <>
       <StartOverlay />
       <TransitionOverlay isActive={transitionActive} />
-      <LevelTracker activeLevel={activeLevel} onLevelClick={handleLevelClick} />
+      <WorldMap activeLevel={activeLevel} onLevelClick={handleLevelClick} visitedLevels={visitedLevels} />
 
-      <div className="pt-14 lg:pl-24 pb-16 lg:pb-0">
+      <div className="pt-14 lg:pl-48 pb-32 lg:pb-16">
         <LevelSection
           ref={setSectionRef("spawn")}
           id="spawn"

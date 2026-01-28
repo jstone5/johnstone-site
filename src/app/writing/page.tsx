@@ -18,7 +18,7 @@ export default async function WritingPage() {
 
   if (posts.length === 0) {
     return (
-      <div className="min-h-screen pt-14 lg:pl-24">
+      <div className="min-h-screen pt-14 lg:pl-48 pb-32 lg:pb-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
           <h1 className="font-[family-name:var(--font-pixelify-sans)] text-3xl sm:text-4xl text-[var(--text)] mb-8">
             Writing
@@ -41,7 +41,7 @@ export default async function WritingPage() {
   }
 
   return (
-    <div className="min-h-screen pt-14 lg:pl-24 pb-16 lg:pb-0">
+    <div className="min-h-screen pt-14 lg:pl-48 pb-32 lg:pb-16">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
         <div className="mb-12">
           <h1 className="font-[family-name:var(--font-pixelify-sans)] text-3xl sm:text-4xl text-[var(--text)] mb-2">

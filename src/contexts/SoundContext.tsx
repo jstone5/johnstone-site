@@ -3,11 +3,13 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { soundManager } from "@/lib/sounds";
 
+type SoundType = 'menuMove' | 'menuSelect' | 'levelEnter' | 'achievement' | 'typing' | 'xpGain';
+
 interface SoundContextType {
   enabled: boolean;
   setEnabled: (enabled: boolean) => void;
   toggle: () => void;
-  play: (sound: 'menuMove' | 'menuSelect' | 'levelEnter' | 'achievement' | 'typing') => void;
+  play: (sound: SoundType) => void;
   init: () => void;
 }
 
@@ -34,7 +36,7 @@ export function SoundProvider({ children }: { children: ReactNode }) {
     setEnabled(!enabled);
   }, [enabled, setEnabled]);
 
-  const play = useCallback((sound: 'menuMove' | 'menuSelect' | 'levelEnter' | 'achievement' | 'typing') => {
+  const play = useCallback((sound: SoundType) => {
     soundManager.play(sound);
   }, []);
 

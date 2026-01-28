@@ -1,7 +1,7 @@
 // 8-bit Sound Generator using Web Audio API
 // Generates authentic retro game sounds programmatically
 
-type SoundType = 'menuMove' | 'menuSelect' | 'levelEnter' | 'achievement' | 'typing';
+type SoundType = 'menuMove' | 'menuSelect' | 'levelEnter' | 'achievement' | 'typing' | 'xpGain';
 
 interface SoundConfig {
   frequency: number;
@@ -35,6 +35,10 @@ const soundConfigs: Record<SoundType, SoundConfig[]> = {
   ],
   typing: [
     { frequency: 800, duration: 0.02, type: 'square', volume: 0.08 },
+  ],
+  xpGain: [
+    { frequency: 880, duration: 0.06, type: 'square', volume: 0.12 },
+    { frequency: 1100, duration: 0.08, type: 'square', volume: 0.1, delay: 0.05 },
   ],
 };
 

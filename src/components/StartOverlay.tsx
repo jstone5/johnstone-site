@@ -6,6 +6,7 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { PixelButton } from "./PixelButton";
 import { useIsClient } from "@/lib/hooks";
 import { useSound } from "@/contexts/SoundContext";
+import { useXP, XP_REWARDS } from "@/contexts/XPContext";
 
 // Seeded random for consistent positions
 function seededRandom(seed: number): number {
@@ -21,6 +22,7 @@ export function StartOverlay() {
   const [isVisible, setIsVisible] = useState(false);
   const prefersReducedMotion = useReducedMotion();
   const { play, init } = useSound();
+  const { addXP } = useXP();
 
   const dismiss = useCallback(() => {
     init();
@@ -29,8 +31,10 @@ export function StartOverlay() {
     if (typeof window !== "undefined") {
       localStorage.setItem(STORAGE_KEY, "1");
       document.body.style.overflow = "";
+      // Grant XP for first visit
+      addXP(XP_REWARDS.firstVisit, "Started the journey!");
     }
-  }, [init, play]);
+  }, [init, play, addXP]);
 
   // Initialize and set up event listeners
   useEffect(() => {
