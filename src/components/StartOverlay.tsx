@@ -50,11 +50,16 @@ export function StartOverlay() {
     setIsVisible(true);
     document.body.style.overflow = "hidden";
 
+    // Track if already dismissed to prevent multiple calls
+    let dismissed = false;
+
     // Handle scroll dismiss
     let scrollAccumulator = 0;
     const handleWheel = (e: WheelEvent) => {
+      if (dismissed) return;
       scrollAccumulator += Math.abs(e.deltaY);
       if (scrollAccumulator >= SCROLL_THRESHOLD) {
+        dismissed = true;
         dismiss();
       }
     };
@@ -65,16 +70,20 @@ export function StartOverlay() {
       touchStartY = e.touches[0].clientY;
     };
     const handleTouchMove = (e: TouchEvent) => {
+      if (dismissed) return;
       const deltaY = touchStartY - e.touches[0].clientY;
       if (deltaY >= SCROLL_THRESHOLD) {
+        dismissed = true;
         dismiss();
       }
     };
 
     // Handle Enter key dismiss
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (dismissed) return;
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
+        dismissed = true;
         dismiss();
       }
     };

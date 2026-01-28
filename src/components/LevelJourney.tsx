@@ -16,6 +16,18 @@ import { SubscribeLevel } from "./levels/SubscribeLevel";
 import { useAchievements } from "@/contexts/AchievementContext";
 import type { Post } from "@/lib/substack";
 
+// Debounce helper
+function debounce<T extends (...args: Parameters<T>) => void>(
+  fn: T,
+  delay: number
+): (...args: Parameters<T>) => void {
+  let timeoutId: NodeJS.Timeout;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn(...args), delay);
+  };
+}
+
 interface LevelJourneyProps {
   featuredPosts?: Post[];
 }
@@ -51,9 +63,27 @@ export function LevelJourney({ featuredPosts = [] }: LevelJourneyProps) {
     []
   );
 
-  // Intersection Observer for active section detection
+  // Intersection Observer for active section detection with debouncing
   useEffect(() => {
     const sections = Array.from(sectionRefs.current.entries());
+    let lastActiveSection: LevelId | null = null;
+
+    // Debounced handler to prevent rapid level changes
+    const handleLevelChange = debounce((newSection: LevelId) => {
+      if (newSection === lastActiveSection) return;
+      lastActiveSection = newSection;
+
+      setTransitionActive(true);
+      setActiveLevel(newSection);
+      setVisitedLevels((prev) => new Set([...prev, newSection]));
+      visitLevel(newSection); // Track for achievements
+      if (typeof window !== "undefined") {
+        history.replaceState(null, "", `#${newSection}`);
+        // Dispatch event for Easter eggs tracking
+        window.dispatchEvent(new CustomEvent("levelchange", { detail: { level: newSection } }));
+      }
+      setTimeout(() => setTransitionActive(false), 50);
+    }, 150); // 150ms debounce
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -77,17 +107,7 @@ export function LevelJourney({ featuredPosts = [] }: LevelJourneyProps) {
         }
 
         if (activeSection) {
-          const newSection = activeSection; // Capture for closures
-          setTransitionActive(true);
-          setActiveLevel(newSection);
-          setVisitedLevels((prev) => new Set([...prev, newSection]));
-          visitLevel(newSection); // Track for achievements
-          if (typeof window !== "undefined") {
-            history.replaceState(null, "", `#${newSection}`);
-            // Dispatch event for Easter eggs tracking
-            window.dispatchEvent(new CustomEvent("levelchange", { detail: { level: newSection } }));
-          }
-          setTimeout(() => setTransitionActive(false), 50);
+          handleLevelChange(activeSection);
         }
       },
       {

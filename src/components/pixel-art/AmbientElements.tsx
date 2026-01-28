@@ -123,7 +123,7 @@ export function PixelCloud({ x, y, size = 48, speed = 60 }: CloudProps) {
         height={size * 0.5}
         viewBox="0 0 16 8"
         style={{ imageRendering: "pixelated" }}
-        opacity="0.15"
+        opacity="0.25"
       >
         <rect x="4" y="4" width="8" height="4" fill={colors.white} />
         <rect x="2" y="6" width="12" height="2" fill={colors.white} />
@@ -311,7 +311,7 @@ export function AmbientBackground({ variant = "full", density = "medium" }: Ambi
     }));
   }, [variant, densityMultiplier]);
 
-  // Generate clouds
+  // Generate clouds - larger sizes for visibility
   const clouds = useMemo(() => {
     if (variant === "stars" || prefersReducedMotion) return [];
     const count = Math.floor(3 * densityMultiplier);
@@ -319,8 +319,8 @@ export function AmbientBackground({ variant = "full", density = "medium" }: Ambi
       id: i,
       x: seededRandom(i * 500) * -50 - 20,
       y: 5 + seededRandom(i * 501) * 20,
-      size: 32 + seededRandom(i * 502) * 32,
-      speed: 80 + seededRandom(i * 503) * 60,
+      size: 80 + seededRandom(i * 502) * 80, // Increased from 32-64 to 80-160
+      speed: 100 + seededRandom(i * 503) * 80, // Slightly slower for larger clouds
     }));
   }, [variant, densityMultiplier, prefersReducedMotion]);
 

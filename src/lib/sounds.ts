@@ -42,10 +42,31 @@ const soundConfigs: Record<SoundType, SoundConfig[]> = {
   ],
 };
 
+// Cooldown times for different sounds (in milliseconds)
+// These prevent sounds from stacking/rapid-firing during scroll events
+const SOUND_COOLDOWNS: Record<SoundType, number> = {
+  menuMove: 100,      // Limit hover sounds
+  menuSelect: 300,    // Prevent double-clicks from double-playing
+  levelEnter: 1000,   // Significant cooldown - level transitions shouldn't rapid-fire
+  achievement: 2000,  // Only one achievement sound every 2 seconds
+  typing: 50,         // Allow rapid typing sounds
+  xpGain: 500,        // Prevent XP sounds from stacking
+};
+
 class SoundManager {
   private audioContext: AudioContext | null = null;
   private enabled: boolean = true;
   private initialized: boolean = false;
+  private lastPlayTime: Record<SoundType, number> = {
+    menuMove: 0,
+    menuSelect: 0,
+    levelEnter: 0,
+    achievement: 0,
+    typing: 0,
+    xpGain: 0,
+  };
+  private lastAnySoundTime: number = 0; // Global cooldown for any sound
+  private static readonly GLOBAL_COOLDOWN = 150; // Minimum ms between ANY sounds
 
   constructor() {
     // Check localStorage for saved preference
@@ -118,6 +139,23 @@ class SoundManager {
 
   play(sound: SoundType): void {
     if (!this.enabled) return;
+
+    const now = Date.now();
+
+    // Global cooldown - prevent ANY sounds from playing too rapidly
+    if (now - this.lastAnySoundTime < SoundManager.GLOBAL_COOLDOWN) {
+      return;
+    }
+
+    // Per-sound cooldown - prevent rapid-fire of same sound type
+    const cooldown = SOUND_COOLDOWNS[sound];
+    if (now - this.lastPlayTime[sound] < cooldown) {
+      return;
+    }
+
+    // Update both timestamps
+    this.lastPlayTime[sound] = now;
+    this.lastAnySoundTime = now;
 
     // Ensure context is initialized
     this.init();

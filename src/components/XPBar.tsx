@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useXP } from "@/contexts/XPContext";
 
@@ -9,23 +9,39 @@ export function XPBar() {
   const [showGain, setShowGain] = useState<{ amount: number; reason: string } | null>(null);
   const [lastGainTimestamp, setLastGainTimestamp] = useState(0);
   const prefersReducedMotion = useReducedMotion();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Show XP gain popup
+  // Show XP gain popup with proper cleanup
   useEffect(() => {
     if (recentGains.length > 0 && recentGains[0].timestamp > lastGainTimestamp) {
       const gain = recentGains[0];
       setLastGainTimestamp(gain.timestamp);
       setShowGain({ amount: gain.amount, reason: gain.reason });
 
-      const timeout = setTimeout(() => setShowGain(null), 2000);
-      return () => clearTimeout(timeout);
+      // Clear any existing timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      // Set new timeout to hide the toast
+      timeoutRef.current = setTimeout(() => {
+        setShowGain(null);
+        timeoutRef.current = null;
+      }, 2500);
     }
+
+    // Cleanup on unmount
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
   }, [recentGains, lastGainTimestamp]);
 
   const progressPercent = getProgressPercent();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 lg:left-24 pointer-events-none">
+    <div className="fixed bottom-0 left-0 right-0 z-50 lg:left-48 pointer-events-none">
       {/* XP Gain popup */}
       <AnimatePresence>
         {showGain && (

@@ -52,6 +52,9 @@ const LOCATIONS: Record<LevelId, { name: string; Icon: IconComponent; descriptio
   },
 };
 
+// LocalStorage key for persisting granted XP
+const XP_GRANTED_KEY = "johnstone-xp-granted-levels";
+
 interface WorldMapProps {
   activeLevel: LevelId;
   onLevelClick: (levelId: LevelId) => void;
@@ -67,8 +70,23 @@ export function WorldMap({ activeLevel, onLevelClick, visitedLevels }: WorldMapP
   const { addXP } = useXP();
   const isFirstRender = useRef(true);
   const grantedXP = useRef<Set<LevelId>>(new Set());
+  const lastLevelChangeTime = useRef(0);
 
-  // Track level changes
+  // Load persisted XP grants from localStorage
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = localStorage.getItem(XP_GRANTED_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as LevelId[];
+        grantedXP.current = new Set(parsed);
+      } catch {
+        // Invalid data, start fresh
+      }
+    }
+  }, []);
+
+  // Track level changes (scroll-based detection should be silent)
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
@@ -76,20 +94,31 @@ export function WorldMap({ activeLevel, onLevelClick, visitedLevels }: WorldMapP
     }
 
     if (activeLevel !== prevLevel) {
-      setIsMoving(true);
-      play("levelEnter");
+      const now = Date.now();
+      // Throttle level changes - minimum 800ms between level transitions
+      if (now - lastLevelChangeTime.current < 800) {
+        return;
+      }
+      lastLevelChangeTime.current = now;
+      setPrevLevel(activeLevel);
 
-      // Grant XP for visiting new levels
+      setIsMoving(true);
+      // NOTE: Don't play sounds here - scroll-triggered level changes should be silent
+      // The menuSelect sound plays on intentional clicks via handleLocationClick
+
+      // Grant XP for visiting new levels (persisted)
       if (!grantedXP.current.has(activeLevel)) {
         grantedXP.current.add(activeLevel);
+        if (typeof window !== "undefined") {
+          localStorage.setItem(XP_GRANTED_KEY, JSON.stringify([...grantedXP.current]));
+        }
         addXP(XP_REWARDS.visitLevel, `Visited ${LOCATIONS[activeLevel].name}`);
       }
 
       const timeout = setTimeout(() => setIsMoving(false), 500);
-      setPrevLevel(activeLevel);
       return () => clearTimeout(timeout);
     }
-  }, [activeLevel, prevLevel, play, addXP]);
+  }, [activeLevel, prevLevel, addXP]);
 
   const handleLocationClick = (levelId: LevelId) => {
     init();
@@ -145,7 +174,6 @@ function DesktopWorldMap({
   prefersReducedMotion,
 }: MapProps) {
   const [hoveredLevel, setHoveredLevel] = useState<LevelId | null>(null);
-  const activeIndex = levels.findIndex((l) => l.id === activeLevel);
 
   return (
     <div className="hidden lg:block fixed left-0 top-0 bottom-0 w-48 z-40 bg-[var(--panel)]/80 backdrop-blur-sm border-r border-[var(--border)]">
@@ -161,38 +189,12 @@ function DesktopWorldMap({
 
       {/* Map content */}
       <div className="relative p-4 h-[calc(100%-80px)] flex flex-col justify-center">
-        {/* Path line connecting locations */}
-        <svg
-          className="absolute inset-4 pointer-events-none"
-          style={{ width: "calc(100% - 32px)", height: "calc(100% - 32px)" }}
-        >
-          {/* Background path */}
-          <path
-            d={generatePath(levels.length)}
-            fill="none"
-            stroke="var(--border)"
-            strokeWidth="2"
-            strokeDasharray="4 4"
-          />
-          {/* Progress path */}
-          <motion.path
-            d={generatePath(levels.length)}
-            fill="none"
-            stroke="var(--accent)"
-            strokeWidth="2"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: (activeIndex + 1) / levels.length }}
-            transition={{ duration: 0.5 }}
-          />
-        </svg>
-
         {/* Locations */}
         <div className="relative flex flex-col gap-8">
           {levels.map((level, index) => {
             const location = LOCATIONS[level.id];
             const isActive = activeLevel === level.id;
             const isVisited = visitedLevels.has(level.id);
-            const isHovered = hoveredLevel === level.id;
 
             return (
               <motion.button
@@ -400,16 +402,3 @@ function MobileWorldMap({
   );
 }
 
-// Generate SVG path for connecting locations
-function generatePath(count: number): string {
-  const points: string[] = [];
-  const height = 100 / count;
-
-  for (let i = 0; i < count; i++) {
-    const y = height * i + height / 2;
-    const x = i % 2 === 0 ? 20 : 30; // Zigzag pattern
-    points.push(`${i === 0 ? "M" : "L"} ${x} ${y}`);
-  }
-
-  return points.join(" ");
-}

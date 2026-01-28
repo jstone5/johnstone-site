@@ -6,33 +6,37 @@ import {
   useState,
   useEffect,
   useCallback,
+  useRef,
   type ReactNode,
 } from "react";
 import { useSound } from "./SoundContext";
 
-// XP thresholds for each level
+// XP thresholds for each level - balanced for gradual progression
 const LEVEL_THRESHOLDS = [
-  0,      // Level 1: 0 XP
-  50,     // Level 2: 50 XP
-  150,    // Level 3: 150 XP
-  300,    // Level 4: 300 XP
-  500,    // Level 5: 500 XP
-  750,    // Level 6: 750 XP
-  1000,   // Level 7: 1000 XP
-  1500,   // Level 8: 1500 XP
-  2000,   // Level 9: 2000 XP
-  3000,   // Level 10: 3000 XP (Max)
+  0,       // Level 1: 0 XP
+  100,     // Level 2: 100 XP
+  250,     // Level 3: 250 XP
+  500,     // Level 4: 500 XP
+  1000,    // Level 5: 1000 XP
+  2000,    // Level 6: 2000 XP
+  3500,    // Level 7: 3500 XP
+  5500,    // Level 8: 5500 XP
+  8000,    // Level 9: 8000 XP
+  12000,   // Level 10: 12000 XP (Max)
 ];
 
 // XP rewards for different actions
 export const XP_REWARDS = {
-  visitLevel: 10,
-  readPost: 25,
-  unlockAchievement: 50,
-  findSecret: 100,
-  konamiCode: 200,
-  firstVisit: 15,
+  visitLevel: 15,       // First time visiting a level
+  readPost: 50,         // Reading a blog post
+  unlockAchievement: 75,// Unlocking an achievement
+  findSecret: 150,      // Finding a secret
+  konamiCode: 300,      // Entering Konami code
+  firstVisit: 25,       // First time on site
 } as const;
+
+// LocalStorage key for tracking granted XP reasons
+const XP_GRANTS_KEY = "johnstone-xp-grants";
 
 interface XPState {
   totalXP: number;
@@ -81,10 +85,14 @@ export function XPProvider({ children }: { children: ReactNode }) {
   const [pendingLevelUp, setPendingLevelUp] = useState<number | null>(null);
   const { play } = useSound();
 
+  // Track which XP grants have already been given (prevents duplicates)
+  const grantedReasons = useRef<Set<string>>(new Set());
+
   // Load from localStorage on mount
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    // Load XP total
     const saved = localStorage.getItem("johnstone-xp");
     if (saved) {
       try {
@@ -105,6 +113,17 @@ export function XPProvider({ children }: { children: ReactNode }) {
         // Invalid data, start fresh
       }
     }
+
+    // Load granted XP reasons (for deduplication)
+    const savedGrants = localStorage.getItem(XP_GRANTS_KEY);
+    if (savedGrants) {
+      try {
+        grantedReasons.current = new Set(JSON.parse(savedGrants));
+      } catch {
+        // Invalid data, start fresh
+      }
+    }
+
     setIsInitialized(true);
   }, []);
 
@@ -125,7 +144,16 @@ export function XPProvider({ children }: { children: ReactNode }) {
   }, [pendingLevelUp, play]);
 
   const addXP = useCallback((amount: number, reason: string) => {
-    play("xpGain"); // Play XP gain sound
+    // CRITICAL: Deduplicate XP grants - each reason can only grant XP once ever
+    if (grantedReasons.current.has(reason)) {
+      return; // Already granted for this reason
+    }
+
+    // Mark as granted and persist
+    grantedReasons.current.add(reason);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(XP_GRANTS_KEY, JSON.stringify([...grantedReasons.current]));
+    }
 
     setState((prev) => {
       const newTotalXP = prev.totalXP + amount;
