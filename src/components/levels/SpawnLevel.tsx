@@ -1,13 +1,15 @@
 "use client";
 
+import { useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { PixelButton } from "@/components/PixelButton";
 import { TypingEffect } from "@/components/TypingEffect";
-import { HeroScene } from "@/components/pixel-art";
+import { HeroScene, CelestialBody } from "@/components/pixel-art";
 import { site } from "@/content/site";
 
 export function SpawnLevel() {
   const prefersReducedMotion = useReducedMotion();
+  const heroSceneRef = useRef<HTMLDivElement>(null);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -42,7 +44,10 @@ export function SpawnLevel() {
         variants={itemVariants}
       >
         <div className="relative">
-          <HeroScene className="rounded-lg overflow-hidden border-2 border-[var(--border)] shadow-[0_0_30px_rgba(78,205,196,0.15)]" />
+          <HeroScene
+            ref={heroSceneRef}
+            className="rounded-lg overflow-hidden border-2 border-[var(--border)] shadow-[0_0_30px_rgba(78,205,196,0.15)]"
+          />
           {/* Decorative corners */}
           <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-[var(--accent)]" />
           <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-[var(--accent)]" />
@@ -50,6 +55,9 @@ export function SpawnLevel() {
           <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-[var(--accent)]" />
         </div>
       </motion.div>
+
+      {/* Sun/Moon that detaches from scene and follows scroll */}
+      <CelestialBody sceneRef={heroSceneRef} />
 
       {/* Text content */}
       <div className="text-center lg:text-left order-1">

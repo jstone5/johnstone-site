@@ -513,9 +513,7 @@ export function AmbientBackground({ variant = "full", density = "medium" }: Ambi
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-      {/* Sun/Moon - behind everything else */}
-      <PixelSun position={sunPosition} />
-      <PixelMoon position={sunPosition} />
+      {/* Sun/Moon now handled by CelestialBody component in HeroScene */}
 
       {/* Stars - with dynamic opacity */}
       {showStars && (

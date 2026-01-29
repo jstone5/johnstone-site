@@ -1,6 +1,8 @@
 "use client";
 
+import { forwardRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { useSky } from "@/contexts/SkyContext";
 
 // Color palette
 const colors = {
@@ -36,54 +38,64 @@ const colors = {
   starYellow: "#FBBF24",
 };
 
-export function HeroScene({ className = "" }: { className?: string }) {
-  const prefersReducedMotion = useReducedMotion();
+export const HeroScene = forwardRef<HTMLDivElement, { className?: string }>(
+  function HeroScene({ className = "" }, ref) {
+    const prefersReducedMotion = useReducedMotion();
+    const { palette } = useSky();
 
-  return (
-    <div className={`relative ${className}`}>
-      <svg
-        viewBox="0 0 160 100"
-        className="w-full h-auto"
-        style={{ imageRendering: "pixelated" }}
-      >
-        {/* Sky gradient */}
-        <defs>
-          <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={colors.skyTop} />
-            <stop offset="100%" stopColor={colors.skyBottom} />
-          </linearGradient>
-        </defs>
-        <rect x="0" y="0" width="160" height="100" fill="url(#skyGradient)" />
+    // Stars visibility based on time of day
+    const showStars = palette.starsOpacity > 0;
 
-        {/* Stars */}
-        <Stars prefersReducedMotion={prefersReducedMotion} />
+    return (
+      <div ref={ref} className={`relative ${className}`}>
+        <svg
+          viewBox="0 0 160 100"
+          className="w-full h-auto"
+          style={{ imageRendering: "pixelated" }}
+        >
+          {/* Sky gradient - now uses CSS variables from sky theme */}
+          <defs>
+            <linearGradient id="heroSkyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="var(--bg)" />
+              <stop offset="100%" stopColor="var(--bg-gradient)" />
+            </linearGradient>
+          </defs>
+          <rect x="0" y="0" width="160" height="100" fill="url(#heroSkyGradient)" />
 
-        {/* Moon */}
-        <Moon prefersReducedMotion={prefersReducedMotion} />
+          {/* Stars - only visible at night/dusk/dawn */}
+          {showStars && (
+            <g style={{ opacity: palette.starsOpacity }}>
+              <Stars prefersReducedMotion={prefersReducedMotion} />
+            </g>
+          )}
 
-        {/* Background buildings (silhouettes) */}
-        <BackgroundBuildings />
+          {/* Sun/Moon is now handled by CelestialBody component */}
+          {/* Empty space where the moon used to be - CelestialBody overlays here */}
 
-        {/* Ground */}
-        <rect x="0" y="80" width="160" height="20" fill={colors.ground1} />
-        <rect x="0" y="85" width="160" height="15" fill={colors.ground2} />
-        <rect x="0" y="95" width="160" height="5" fill={colors.groundDark} />
+          {/* Background buildings (silhouettes) */}
+          <BackgroundBuildings />
 
-        {/* Ground details */}
-        <GroundDetails />
+          {/* Ground */}
+          <rect x="0" y="80" width="160" height="20" fill={colors.ground1} />
+          <rect x="0" y="85" width="160" height="15" fill={colors.ground2} />
+          <rect x="0" y="95" width="160" height="5" fill={colors.groundDark} />
 
-        {/* Main building/tower */}
-        <MainTower prefersReducedMotion={prefersReducedMotion} />
+          {/* Ground details */}
+          <GroundDetails />
 
-        {/* Character */}
-        <Character prefersReducedMotion={prefersReducedMotion} />
+          {/* Main building/tower */}
+          <MainTower prefersReducedMotion={prefersReducedMotion} />
 
-        {/* Floating particles */}
-        {!prefersReducedMotion && <FloatingParticles />}
-      </svg>
-    </div>
-  );
-}
+          {/* Character */}
+          <Character prefersReducedMotion={prefersReducedMotion} />
+
+          {/* Floating particles */}
+          {!prefersReducedMotion && <FloatingParticles />}
+        </svg>
+      </div>
+    );
+  }
+);
 
 function Stars({ prefersReducedMotion }: { prefersReducedMotion: boolean | null }) {
   const starPositions = [
@@ -126,27 +138,7 @@ function Stars({ prefersReducedMotion }: { prefersReducedMotion: boolean | null 
   );
 }
 
-function Moon({ prefersReducedMotion }: { prefersReducedMotion: boolean | null }) {
-  return (
-    <motion.g
-      animate={prefersReducedMotion ? {} : {
-        y: [0, -2, 0],
-      }}
-      transition={{ duration: 4, repeat: Infinity }}
-    >
-      {/* Moon body */}
-      <rect x="135" y="15" width="16" height="16" fill={colors.starWhite} />
-      <rect x="137" y="13" width="12" height="2" fill={colors.starWhite} />
-      <rect x="137" y="31" width="12" height="2" fill={colors.starWhite} />
-      <rect x="133" y="17" width="2" height="12" fill={colors.starWhite} />
-      <rect x="151" y="17" width="2" height="12" fill={colors.starWhite} />
-      {/* Craters */}
-      <rect x="138" y="18" width="3" height="3" fill={colors.building1} opacity="0.3" />
-      <rect x="145" y="23" width="4" height="4" fill={colors.building1} opacity="0.3" />
-      <rect x="140" y="26" width="2" height="2" fill={colors.building1} opacity="0.3" />
-    </motion.g>
-  );
-}
+// Moon component removed - now handled by CelestialBody
 
 function BackgroundBuildings() {
   return (

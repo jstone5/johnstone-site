@@ -45,3 +45,6 @@ export {
   HeroScene,
   MiniScene,
 } from "./HeroScene";
+
+// Celestial Body (scroll-linked sun/moon)
+export { CelestialBody } from "./CelestialBody";
