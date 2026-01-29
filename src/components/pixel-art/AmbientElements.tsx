@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { useSky } from "@/contexts/SkyContext";
 
 // Seeded random for consistent positions
 function seededRandom(seed: number): number {
@@ -91,7 +92,7 @@ export function PixelStarBurst({ x, y, size = 8, color = colors.cyan1, delay = 0
   );
 }
 
-// Floating pixel cloud
+// Floating pixel cloud - uses CSS variable for dynamic tinting
 interface CloudProps {
   x: number;
   y: number;
@@ -123,14 +124,14 @@ export function PixelCloud({ x, y, size = 48, speed = 60 }: CloudProps) {
         height={size * 0.5}
         viewBox="0 0 16 8"
         style={{ imageRendering: "pixelated" }}
-        opacity="0.25"
+        opacity="0.35"
       >
-        <rect x="4" y="4" width="8" height="4" fill={colors.white} />
-        <rect x="2" y="6" width="12" height="2" fill={colors.white} />
-        <rect x="6" y="2" width="6" height="2" fill={colors.white} />
-        <rect x="8" y="0" width="4" height="2" fill={colors.white} />
-        <rect x="0" y="6" width="2" height="2" fill={colors.white} opacity="0.5" />
-        <rect x="14" y="6" width="2" height="2" fill={colors.white} opacity="0.5" />
+        <rect x="4" y="4" width="8" height="4" fill="var(--cloud-tint, white)" />
+        <rect x="2" y="6" width="12" height="2" fill="var(--cloud-tint, white)" />
+        <rect x="6" y="2" width="6" height="2" fill="var(--cloud-tint, white)" />
+        <rect x="8" y="0" width="4" height="2" fill="var(--cloud-tint, white)" />
+        <rect x="0" y="6" width="2" height="2" fill="var(--cloud-tint, white)" opacity="0.5" />
+        <rect x="14" y="6" width="2" height="2" fill="var(--cloud-tint, white)" opacity="0.5" />
       </svg>
     </motion.div>
   );
@@ -197,6 +198,179 @@ export function RisingSparkle({
   );
 }
 
+// Pixel Sun
+interface CelestialProps {
+  position: number; // 0-1, where 0.5 is highest point
+}
+
+export function PixelSun({ position }: CelestialProps) {
+  const prefersReducedMotion = useReducedMotion();
+
+  // Calculate vertical position - arc from bottom left to top center to bottom right
+  // position: 0.25 = sunrise (left, low), 0.5 = noon (center, high), 0.75 = sunset (right, low)
+  const normalizedPos = (position - 0.25) / 0.5; // 0 at sunrise, 1 at sunset
+  const x = normalizedPos * 80 + 10; // 10% to 90% horizontal
+  const arcHeight = Math.sin(normalizedPos * Math.PI); // 0 at edges, 1 at center
+  const y = 70 - arcHeight * 55; // Lower at edges, higher at center (15% to 70%)
+
+  // Only show during day (position 0.25 to 0.75)
+  if (position < 0.2 || position > 0.8) return null;
+
+  return (
+    <motion.div
+      className="absolute pointer-events-none"
+      style={{
+        left: `${x}%`,
+        top: `${y}%`,
+        opacity: "var(--sun-moon-opacity, 0.8)",
+      }}
+      animate={prefersReducedMotion ? {} : {
+        scale: [1, 1.05, 1],
+      }}
+      transition={{
+        duration: 4,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+    >
+      <svg
+        width={48}
+        height={48}
+        viewBox="0 0 16 16"
+        style={{ imageRendering: "pixelated" }}
+      >
+        {/* Sun rays */}
+        <rect x="7" y="0" width="2" height="2" fill="#FFE066" opacity="0.7" />
+        <rect x="7" y="14" width="2" height="2" fill="#FFE066" opacity="0.7" />
+        <rect x="0" y="7" width="2" height="2" fill="#FFE066" opacity="0.7" />
+        <rect x="14" y="7" width="2" height="2" fill="#FFE066" opacity="0.7" />
+        <rect x="2" y="2" width="2" height="2" fill="#FFE066" opacity="0.5" />
+        <rect x="12" y="2" width="2" height="2" fill="#FFE066" opacity="0.5" />
+        <rect x="2" y="12" width="2" height="2" fill="#FFE066" opacity="0.5" />
+        <rect x="12" y="12" width="2" height="2" fill="#FFE066" opacity="0.5" />
+        {/* Sun core */}
+        <rect x="5" y="4" width="6" height="8" fill="#FFDD44" />
+        <rect x="4" y="5" width="8" height="6" fill="#FFDD44" />
+        {/* Highlight */}
+        <rect x="5" y="5" width="2" height="2" fill="#FFFFAA" />
+      </svg>
+    </motion.div>
+  );
+}
+
+// Pixel Moon
+export function PixelMoon({ position }: CelestialProps) {
+  const prefersReducedMotion = useReducedMotion();
+
+  // Moon arc - similar to sun but for night
+  // position: 0.75-1 and 0-0.25 = night
+  let normalizedPos: number;
+  if (position >= 0.75) {
+    normalizedPos = (position - 0.75) / 0.5; // 0 to 0.5
+  } else {
+    normalizedPos = (position + 0.25) / 0.5; // 0.5 to 1
+  }
+
+  const x = normalizedPos * 80 + 10;
+  const arcHeight = Math.sin(normalizedPos * Math.PI);
+  const y = 70 - arcHeight * 55;
+
+  // Only show during night (position 0.75 to 1 and 0 to 0.25)
+  if (position > 0.3 && position < 0.7) return null;
+
+  return (
+    <motion.div
+      className="absolute pointer-events-none"
+      style={{
+        left: `${x}%`,
+        top: `${y}%`,
+        opacity: "var(--sun-moon-opacity, 0.9)",
+      }}
+      animate={prefersReducedMotion ? {} : {
+        y: [-2, 2, -2],
+      }}
+      transition={{
+        duration: 6,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+    >
+      <svg
+        width={40}
+        height={40}
+        viewBox="0 0 12 12"
+        style={{ imageRendering: "pixelated" }}
+      >
+        {/* Moon glow */}
+        <rect x="3" y="1" width="6" height="10" fill="#E8E8F0" opacity="0.3" />
+        <rect x="1" y="3" width="10" height="6" fill="#E8E8F0" opacity="0.3" />
+        {/* Moon body - crescent effect */}
+        <rect x="4" y="2" width="5" height="8" fill="#F0F0F8" />
+        <rect x="3" y="3" width="6" height="6" fill="#F0F0F8" />
+        <rect x="2" y="4" width="7" height="4" fill="#F0F0F8" />
+        {/* Shadow for crescent */}
+        <rect x="6" y="3" width="2" height="6" fill="#C8C8D8" opacity="0.4" />
+        <rect x="7" y="4" width="2" height="4" fill="#C8C8D8" opacity="0.6" />
+        {/* Craters */}
+        <rect x="4" y="4" width="1" height="1" fill="#D8D8E8" />
+        <rect x="5" y="7" width="1" height="1" fill="#D8D8E8" />
+        <rect x="3" y="6" width="1" height="1" fill="#D8D8E8" />
+      </svg>
+    </motion.div>
+  );
+}
+
+// Shooting star for night sky
+export function ShootingStar({ delay = 0 }: { delay?: number }) {
+  const prefersReducedMotion = useReducedMotion();
+
+  // Random starting position
+  const startX = 10 + Math.random() * 60;
+  const startY = 5 + Math.random() * 30;
+
+  if (prefersReducedMotion) return null;
+
+  return (
+    <motion.div
+      className="absolute pointer-events-none"
+      style={{
+        left: `${startX}%`,
+        top: `${startY}%`,
+      }}
+      initial={{ opacity: 0, x: 0, y: 0 }}
+      animate={{
+        opacity: [0, 1, 1, 0],
+        x: [0, 150],
+        y: [0, 100],
+      }}
+      transition={{
+        duration: 1,
+        delay: delay,
+        repeat: Infinity,
+        repeatDelay: 30 + Math.random() * 60, // Random 30-90 seconds between
+        ease: "easeOut",
+      }}
+    >
+      <svg
+        width={24}
+        height={24}
+        viewBox="0 0 12 12"
+        style={{ imageRendering: "pixelated" }}
+      >
+        {/* Trail */}
+        <rect x="0" y="6" width="2" height="1" fill="#FFFFFF" opacity="0.3" />
+        <rect x="2" y="5" width="2" height="1" fill="#FFFFFF" opacity="0.5" />
+        <rect x="4" y="4" width="2" height="1" fill="#FFFFFF" opacity="0.7" />
+        <rect x="6" y="3" width="2" height="1" fill="#FFFFFF" opacity="0.9" />
+        {/* Star head */}
+        <rect x="8" y="2" width="2" height="2" fill="#FFFFFF" />
+        <rect x="9" y="1" width="1" height="1" fill="#FFFFFF" opacity="0.8" />
+        <rect x="10" y="2" width="1" height="1" fill="#FFFFFF" opacity="0.8" />
+      </svg>
+    </motion.div>
+  );
+}
+
 // Floating orb with glow
 interface OrbProps {
   x: number;
@@ -254,16 +428,19 @@ interface AmbientBackgroundProps {
 
 export function AmbientBackground({ variant = "full", density = "medium" }: AmbientBackgroundProps) {
   const prefersReducedMotion = useReducedMotion();
+  const { sunPosition, palette, phase } = useSky();
 
   const densityMultiplier = density === "low" ? 0.5 : density === "high" ? 1.5 : 1;
+  const showStars = palette.starsOpacity > 0;
+  const isNight = phase === "night" || phase === "dusk" || phase === "dawn";
 
   // Generate stars with seeded random
   const stars = useMemo(() => {
-    const count = Math.floor(30 * densityMultiplier);
+    const count = Math.floor(40 * densityMultiplier); // Increased star count
     return Array.from({ length: count }, (_, i) => ({
       id: i,
       x: seededRandom(i * 100) * 100,
-      y: seededRandom(i * 101) * 100,
+      y: seededRandom(i * 101) * 70, // Keep stars in upper portion
       size: seededRandom(i * 102) > 0.7 ? 3 : 2,
       delay: seededRandom(i * 103) * 3,
       color: seededRandom(i * 104) > 0.8 ? colors.cyan2 :
@@ -278,7 +455,7 @@ export function AmbientBackground({ variant = "full", density = "medium" }: Ambi
     return Array.from({ length: count }, (_, i) => ({
       id: i,
       x: seededRandom(i * 200) * 100,
-      y: seededRandom(i * 201) * 100,
+      y: seededRandom(i * 201) * 60,
       delay: seededRandom(i * 202) * 4,
       color: seededRandom(i * 203) > 0.5 ? colors.cyan1 : colors.purple1,
     }));
@@ -299,7 +476,7 @@ export function AmbientBackground({ variant = "full", density = "medium" }: Ambi
     }));
   }, [variant, densityMultiplier]);
 
-  // Generate orbs
+  // Generate orbs - only show at night/dusk
   const orbs = useMemo(() => {
     if (variant !== "full") return [];
     const count = Math.floor(5 * densityMultiplier);
@@ -314,39 +491,61 @@ export function AmbientBackground({ variant = "full", density = "medium" }: Ambi
   // Generate clouds - larger sizes for visibility
   const clouds = useMemo(() => {
     if (variant === "stars" || prefersReducedMotion) return [];
-    const count = Math.floor(3 * densityMultiplier);
+    const count = Math.floor(4 * densityMultiplier); // Slightly more clouds
     return Array.from({ length: count }, (_, i) => ({
       id: i,
       x: seededRandom(i * 500) * -50 - 20,
-      y: 5 + seededRandom(i * 501) * 20,
-      size: 80 + seededRandom(i * 502) * 80, // Increased from 32-64 to 80-160
-      speed: 100 + seededRandom(i * 503) * 80, // Slightly slower for larger clouds
+      y: 5 + seededRandom(i * 501) * 25,
+      size: 80 + seededRandom(i * 502) * 80,
+      speed: 100 + seededRandom(i * 503) * 80,
     }));
   }, [variant, densityMultiplier, prefersReducedMotion]);
 
+  // Generate shooting stars (only at night)
+  const shootingStars = useMemo(() => {
+    if (!isNight || prefersReducedMotion) return [];
+    return Array.from({ length: 3 }, (_, i) => ({
+      id: i,
+      delay: i * 25 + seededRandom(i * 600) * 20, // Stagger them
+    }));
+  }, [isNight, prefersReducedMotion]);
+
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-      {/* Stars */}
-      {stars.map((star) => (
-        <PixelStar
-          key={`star-${star.id}`}
-          x={star.x}
-          y={star.y}
-          size={star.size}
-          delay={star.delay}
-          color={star.color}
-        />
-      ))}
+      {/* Sun/Moon - behind everything else */}
+      <PixelSun position={sunPosition} />
+      <PixelMoon position={sunPosition} />
 
-      {/* Star bursts */}
-      {starBursts.map((burst) => (
-        <PixelStarBurst
-          key={`burst-${burst.id}`}
-          x={burst.x}
-          y={burst.y}
-          delay={burst.delay}
-          color={burst.color}
-        />
+      {/* Stars - with dynamic opacity */}
+      {showStars && (
+        <div style={{ opacity: palette.starsOpacity, transition: "opacity 2s ease-out" }}>
+          {stars.map((star) => (
+            <PixelStar
+              key={`star-${star.id}`}
+              x={star.x}
+              y={star.y}
+              size={star.size}
+              delay={star.delay}
+              color={star.color}
+            />
+          ))}
+
+          {/* Star bursts */}
+          {starBursts.map((burst) => (
+            <PixelStarBurst
+              key={`burst-${burst.id}`}
+              x={burst.x}
+              y={burst.y}
+              delay={burst.delay}
+              color={burst.color}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Shooting stars - only at night */}
+      {shootingStars.map((star) => (
+        <ShootingStar key={`shooting-${star.id}`} delay={star.delay} />
       ))}
 
       {/* Rising sparkles */}
@@ -361,15 +560,17 @@ export function AmbientBackground({ variant = "full", density = "medium" }: Ambi
         />
       ))}
 
-      {/* Floating orbs */}
-      {orbs.map((orb) => (
-        <FloatingOrb
-          key={`orb-${orb.id}`}
-          x={orb.x}
-          y={orb.y}
-          color={orb.color}
-        />
-      ))}
+      {/* Floating orbs - more visible at night */}
+      <div style={{ opacity: isNight ? 1 : 0.3, transition: "opacity 2s ease-out" }}>
+        {orbs.map((orb) => (
+          <FloatingOrb
+            key={`orb-${orb.id}`}
+            x={orb.x}
+            y={orb.y}
+            color={orb.color}
+          />
+        ))}
+      </div>
 
       {/* Clouds */}
       {clouds.map((cloud) => (

@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  /* PRD Color tokens */
+  /* PRD Color tokens - dynamically updated by SkyTheme */
   --bg: #070A0F;
+  --bg-gradient: #0C1220;
   --panel: #0C1220;
   --panel2: #0F1A2E;
   --text: #E6EDF3;
@@ -12,6 +13,12 @@
   --danger: #FF5C7A;
   --border: rgba(159, 176, 195, 0.25);
   --border-active: rgba(110, 231, 255, 0.45);
+
+  /* Sky-specific variables */
+  --stars-opacity: 1;
+  --cloud-tint: #1a2744;
+  --glow-color: rgba(110, 231, 255, 0.15);
+  --sun-moon-opacity: 0.9;
 
   /* Font variables */
   --font-body: var(--font-space-grotesk), system-ui, sans-serif;
@@ -42,10 +49,26 @@ html {
 }
 
 body {
-  background: var(--bg);
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg-gradient) 100%);
+  background-attachment: fixed;
   color: var(--text);
   font-family: var(--font-body);
   min-height: 100svh;
+  transition: background 2s ease-out, color 1s ease-out;
+}
+
+/* Smooth transitions for all themed elements */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 1s;
+  transition-timing-function: ease-out;
+}
+
+/* Exclude animation and transform from the global transition */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0s;
+  }
 }
 
 /* Scanlines overlay */
