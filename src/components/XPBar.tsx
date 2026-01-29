@@ -1,42 +1,55 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useXP } from "@/contexts/XPContext";
 
 export function XPBar() {
   const { level, totalXP, xpInCurrentLevel, xpToNextLevel, isMaxLevel, getProgressPercent, recentGains } = useXP();
   const [showGain, setShowGain] = useState<{ amount: number; reason: string } | null>(null);
-  const [lastGainTimestamp, setLastGainTimestamp] = useState(0);
+  const lastProcessedTimestamp = useRef(0);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prefersReducedMotion = useReducedMotion();
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Stable function to hide the toast
+  const hideToast = useCallback(() => {
+    setShowGain(null);
+    timeoutRef.current = null;
+  }, []);
 
   // Show XP gain popup with proper cleanup
   useEffect(() => {
-    if (recentGains.length > 0 && recentGains[0].timestamp > lastGainTimestamp) {
-      const gain = recentGains[0];
-      setLastGainTimestamp(gain.timestamp);
-      setShowGain({ amount: gain.amount, reason: gain.reason });
+    // Check if there's a new gain we haven't processed
+    if (recentGains.length > 0) {
+      const latestGain = recentGains[0];
 
-      // Clear any existing timeout
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+      if (latestGain.timestamp > lastProcessedTimestamp.current) {
+        // New gain detected - update our tracking ref
+        lastProcessedTimestamp.current = latestGain.timestamp;
+
+        // Clear any existing timeout first
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+
+        // Show the toast
+        setShowGain({ amount: latestGain.amount, reason: latestGain.reason });
+
+        // Set timeout to hide after 3 seconds
+        timeoutRef.current = setTimeout(hideToast, 3000);
       }
-
-      // Set new timeout to hide the toast
-      timeoutRef.current = setTimeout(() => {
-        setShowGain(null);
-        timeoutRef.current = null;
-      }, 2500);
     }
+  }, [recentGains, hideToast]);
 
-    // Cleanup on unmount
+  // Cleanup timeout on unmount
+  useEffect(() => {
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [recentGains, lastGainTimestamp]);
+  }, []);
 
   const progressPercent = getProgressPercent();
 

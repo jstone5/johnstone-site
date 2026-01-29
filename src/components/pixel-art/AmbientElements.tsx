@@ -206,12 +206,13 @@ interface CelestialProps {
 export function PixelSun({ position }: CelestialProps) {
   const prefersReducedMotion = useReducedMotion();
 
-  // Calculate vertical position - arc from bottom left to top center to bottom right
-  // position: 0.25 = sunrise (left, low), 0.5 = noon (center, high), 0.75 = sunset (right, low)
+  // Calculate vertical position - arc in the RIGHT side of the screen to avoid content
+  // position: 0.25 = sunrise (right edge, low), 0.5 = noon (right-center, high), 0.75 = sunset (right edge, low)
   const normalizedPos = (position - 0.25) / 0.5; // 0 at sunrise, 1 at sunset
-  const x = normalizedPos * 80 + 10; // 10% to 90% horizontal
+  // Keep sun on the RIGHT side of the screen (60% to 92%) to avoid overlapping content
+  const x = 60 + normalizedPos * 32; // 60% to 92% horizontal (right side only)
   const arcHeight = Math.sin(normalizedPos * Math.PI); // 0 at edges, 1 at center
-  const y = 70 - arcHeight * 55; // Lower at edges, higher at center (15% to 70%)
+  const y = 60 - arcHeight * 45; // Lower at edges, higher at center (15% to 60%)
 
   // Only show during day (position 0.25 to 0.75)
   if (position < 0.2 || position > 0.8) return null;
