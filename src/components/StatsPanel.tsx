@@ -67,7 +67,7 @@ function StatBar({ stat, delay }: { stat: Stat; delay: number }) {
       </div>
 
       {/* Stat bar container */}
-      <div className="h-2 bg-[var(--bg)] rounded-sm overflow-hidden">
+      <div className="h-2 bg-[var(--panel)] rounded-sm overflow-hidden">
         <motion.div
           className={`h-full ${colorClasses[color]} ${glowClasses[color]}`}
           initial={{ width: 0 }}

@@ -211,7 +211,7 @@ function PressStartBadge() {
   if (!hasImage) {
     return (
       <motion.div
-        className="inline-block px-4 py-2 mb-6 bg-[var(--accent2)] text-[var(--bg)] font-[family-name:var(--font-pixelify-sans)] text-sm pixel-corners-sm"
+        className="inline-block px-4 py-2 mb-6 bg-[var(--accent2)] text-[var(--panel)] font-[family-name:var(--font-pixelify-sans)] text-sm pixel-corners-sm"
         animate={prefersReducedMotion ? {} : { scale: [1, 1.02, 1] }}
         transition={{ duration: 0.8, repeat: Infinity }}
       >

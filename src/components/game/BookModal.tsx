@@ -52,7 +52,7 @@ export const BookModal = memo(function BookModal({
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90vw] max-w-md"
           >
-            <div className="bg-[var(--bg)] border-2 border-[var(--border)] rounded-lg shadow-2xl overflow-hidden">
+            <div className="bg-[var(--panel)] border-2 border-[var(--border)] rounded-lg shadow-2xl overflow-hidden">
               {/* Header */}
               <div className="flex items-start gap-4 p-6">
                 {/* Book cover */}
@@ -86,7 +86,7 @@ export const BookModal = memo(function BookModal({
                     href={amazonUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-[var(--bg)] rounded font-medium text-sm hover:opacity-90 transition-opacity"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-[var(--panel)] rounded font-medium text-sm hover:opacity-90 transition-opacity"
                   >
                     View on Amazon
                     <svg
@@ -114,7 +114,7 @@ export const BookModal = memo(function BookModal({
 
               {/* Footer hint */}
               <div className="bg-[var(--bg-subtle)] px-6 py-3 text-xs text-[var(--muted)] text-center">
-                Press <kbd className="px-1.5 py-0.5 bg-[var(--bg)] rounded border border-[var(--border)] font-mono">ESC</kbd> or click outside to close
+                Press <kbd className="px-1.5 py-0.5 bg-[var(--panel)] rounded border border-[var(--border)] font-mono">ESC</kbd> or click outside to close
               </div>
             </div>
           </motion.div>

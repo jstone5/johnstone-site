@@ -78,7 +78,7 @@ export function XPBar() {
       </AnimatePresence>
 
       {/* Main XP Bar */}
-      <div className="bg-[var(--bg)]/90 backdrop-blur-sm border-t border-[var(--border)] px-4 py-2 pointer-events-auto">
+      <div className="bg-[var(--panel)]/90 backdrop-blur-sm border-t border-[var(--border)] px-4 py-2 pointer-events-auto">
         <div className="max-w-4xl mx-auto flex items-center gap-4">
           {/* Level badge */}
           <div className="flex items-center gap-2">

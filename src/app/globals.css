@@ -2,12 +2,12 @@
 
 :root {
   /* PRD Color tokens - dynamically updated by SkyTheme */
-  --bg: #070A0F;
-  --bg-gradient: #0C1220;
+  --bg: #080C14;
+  --bg-gradient: #0E1428;
   --panel: #0C1220;
   --panel2: #0F1A2E;
   --text: #E6EDF3;
-  --muted: #9FB0C3;
+  --muted: #7A90A8;
   --accent: #6EE7FF;
   --accent2: #FDE047;
   --danger: #FF5C7A;

@@ -54,7 +54,7 @@ export function DialogBox({
 
         {/* Speaker label */}
         {speaker && (
-          <div className="absolute -top-3 left-4 px-2 bg-[var(--bg)]">
+          <div className="absolute -top-3 left-4 px-2 bg-[var(--panel)]">
             <span className={`font-[family-name:var(--font-pixelify-sans)] text-sm ${speakerColors[variant]}`}>
               {speaker}
             </span>

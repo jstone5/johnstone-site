@@ -38,7 +38,7 @@ export const PixelButton = forwardRef<
 
   const variantStyles = {
     primary:
-      "bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent2)] active:translate-y-[2px] hover:shadow-[0_0_20px_rgba(110,231,255,0.3)]",
+      "bg-[var(--accent)] text-[var(--panel)] hover:bg-[var(--accent2)] active:translate-y-[2px] hover:shadow-[0_0_20px_rgba(110,231,255,0.3)]",
     secondary:
       "bg-transparent text-[var(--text)] border-2 border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--accent)] active:translate-y-[2px] hover:shadow-[0_0_15px_rgba(110,231,255,0.15)]",
   };

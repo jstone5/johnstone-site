@@ -29,7 +29,7 @@ export const MobileControls = memo(function MobileControls({
     handler();
   }, []);
 
-  const buttonClass = "w-16 h-16 rounded-full bg-[var(--bg)]/80 border-2 border-[var(--border)] flex items-center justify-center text-[var(--text)] active:bg-[var(--accent)]/30 active:border-[var(--accent)] touch-none select-none";
+  const buttonClass = "w-16 h-16 rounded-full bg-[var(--panel)]/80 border-2 border-[var(--border)] flex items-center justify-center text-[var(--text)] active:bg-[var(--accent)]/30 active:border-[var(--accent)] touch-none select-none";
 
   return (
     <div className="fixed bottom-4 left-0 right-0 px-4 flex justify-between items-end pointer-events-none z-40 md:hidden">
@@ -86,19 +86,19 @@ export const KeyboardHint = memo(function KeyboardHint({ visible }: KeyboardHint
   return (
     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 hidden md:flex items-center gap-2 text-[var(--muted)] text-sm animate-pulse">
       <div className="flex gap-1">
-        <kbd className="px-2 py-1 bg-[var(--bg)]/80 rounded border border-[var(--border)] font-mono text-xs">
+        <kbd className="px-2 py-1 bg-[var(--panel)]/80 rounded border border-[var(--border)] font-mono text-xs">
           <svg width="12" height="12" viewBox="0 0 12 12" className="inline">
             <path d="M6 2L2 6l4 4" stroke="currentColor" strokeWidth="1.5" fill="none" />
           </svg>
         </kbd>
-        <kbd className="px-2 py-1 bg-[var(--bg)]/80 rounded border border-[var(--border)] font-mono text-xs">
+        <kbd className="px-2 py-1 bg-[var(--panel)]/80 rounded border border-[var(--border)] font-mono text-xs">
           <svg width="12" height="12" viewBox="0 0 12 12" className="inline">
             <path d="M6 10L10 6l-4-4" stroke="currentColor" strokeWidth="1.5" fill="none" />
           </svg>
         </kbd>
       </div>
       <span>to move</span>
-      <kbd className="px-2 py-1 bg-[var(--bg)]/80 rounded border border-[var(--border)] font-mono text-xs">
+      <kbd className="px-2 py-1 bg-[var(--panel)]/80 rounded border border-[var(--border)] font-mono text-xs">
         Space
       </kbd>
       <span>to jump</span>

@@ -59,7 +59,7 @@ export function SpawnLevel() {
           }}
         >
           {/* Semi-transparent panel for text readability */}
-          <div className="bg-[var(--bg)]/85 backdrop-blur-sm rounded-lg p-6 sm:p-8 border border-[var(--border)]/50 shadow-lg">
+          <div className="bg-[var(--panel)]/90 backdrop-blur-sm rounded-lg p-6 sm:p-8 border border-[var(--border)]/50 shadow-lg">
             <motion.h1
               className="font-[family-name:var(--font-pixelify-sans)] text-4xl sm:text-5xl lg:text-6xl text-[var(--text)] mb-4"
               variants={itemVariants}
