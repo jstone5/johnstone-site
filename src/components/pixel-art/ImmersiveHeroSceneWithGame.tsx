@@ -139,33 +139,34 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
   const showStars = palette.starsOpacity > 0;
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isClient, setIsClient] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 1400, height: 900 });
   const [showKeyboardHint, setShowKeyboardHint] = useState(true);
   const [selectedBook, setSelectedBook] = useState<BookPlatformType | null>(null);
   const [flagpoleReached, setFlagpoleReached] = useState(false);
 
-  // Camera offset for scrolling (in pixels)
-  const [cameraX, setCameraX] = useState(0);
+  // Direct DOM refs for per-frame updates (no React state needed)
+  const worldContainerRef = useRef<HTMLDivElement>(null);
+  const playerElementRef = useRef<HTMLDivElement>(null);
+  const bgParallaxRef = useRef<HTMLDivElement>(null);
+  const cameraXRef = useRef(0);
 
   // Two-phase camera system
-  const cameraLerpRef = useRef(0); // 0 = idle (player on right), 1 = game (player on left)
+  const cameraLerpRef = useRef(0);
   const onGameStartRef = useRef(onGameStart);
   onGameStartRef.current = onGameStart;
   const lastProgressRef = useRef(0);
 
-  // Mark client-side rendering
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  // Player visual state — only updates when walk frame, facing, or grounded changes (~10fps)
+  const prevVisualsRef = useRef({ facingRight: true, walkFrame: 0, grounded: true });
+  const [playerVisuals, setPlayerVisuals] = useState({ facingRight: true, walkFrame: 0, grounded: true });
 
-  const groundY = dimensions.height * 0.85; // Ground at 85% down
+  const groundY = dimensions.height * 0.85;
 
   // Generate section-based platforms using absolute pixel coordinates
   const platforms = useMemo((): Platform[] => {
     const result: Platform[] = [];
     let bookIndex = 0;
-    let sectionStartX = dimensions.width + 100; // First book just past viewport right edge
+    let sectionStartX = dimensions.width + 100;
 
     for (const sectionType of SECTION_ORDER) {
       const template = SECTION_TEMPLATES[sectionType];
@@ -187,35 +188,35 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
       }
 
       if (bookIndex >= BOOKS_DATA.length) break;
-
-      // Calculate section width for spacing
       const maxDx = Math.max(...template.map((s) => s.dx));
-      sectionStartX += maxDx + BOOK.WIDTH + 150; // 150px gap between sections
+      sectionStartX += maxDx + BOOK.WIDTH + 150;
     }
 
     return result;
   }, [dimensions.width]);
 
-  // Dynamic world width based on content
+  // Pre-compute screen Y for each platform (stable when groundY is stable)
+  const platformScreenYs = useMemo(() => {
+    return platforms.map((p) => groundY - p.y - BOOK.HEIGHT);
+  }, [platforms, groundY]);
+
   const worldWidth = useMemo(() => {
     if (platforms.length === 0) return dimensions.width * 4;
     const lastPlatform = platforms[platforms.length - 1];
     return Math.max(lastPlatform.x + BOOK.WIDTH + 400, dimensions.width * 2);
   }, [platforms, dimensions.width]);
 
-  // Flagpole just past the last book
   const flagpoleX = useMemo(() => {
     if (platforms.length === 0) return 3000;
     const lastPlatform = platforms[platforms.length - 1];
     return lastPlatform.x + BOOK.WIDTH + 200;
   }, [platforms]);
 
-  // Sort platforms by height descending for collision priority (highest first)
   const sortedPlatforms = useMemo(() => {
     return [...platforms].sort((a, b) => b.y - a.y);
   }, [platforms]);
 
-  // Player state
+  // Player physics state (ref, not React state — updated 60fps)
   const playerRef = useRef({
     x: dimensions.width * 0.7,
     y: groundY - PLAYER.HEIGHT,
@@ -225,7 +226,6 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
     facingRight: true,
     walkFrame: 0,
   });
-  const [playerState, setPlayerState] = useState(playerRef.current);
 
   // Handle resize
   useEffect(() => {
@@ -255,10 +255,9 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
 
   const { getInput, setLeft, setRight, setJump } = useGameInput(handleFirstInput);
 
-  // Animation timer
   const walkTimer = useRef(0);
 
-  // Game update loop
+  // Game update loop — uses direct DOM manipulation instead of React state
   const updateGame = useCallback(
     (deltaTime: number) => {
       if (prefersReducedMotion || selectedBook) return;
@@ -293,7 +292,6 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
       // --- Horizontal update + side collision ---
       player.x += player.vx;
 
-      // Side collision with books (must jump over, can't walk through)
       for (const platform of sortedPlatforms) {
         const platScreenX = platform.x;
         const platScreenY = groundY - platform.y - BOOK.HEIGHT;
@@ -303,12 +301,9 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
         const playerRight = player.x + PLAYER.WIDTH;
         const playerBottom = player.y + PLAYER.HEIGHT;
 
-        // Skip if no vertical overlap (generous top tolerance for landing from side)
         if (playerBottom <= platScreenY + 25 || player.y >= platBottom) continue;
-        // Skip if no horizontal overlap
         if (playerRight <= platScreenX || player.x >= platRight) continue;
 
-        // Push player out based on movement direction
         if (player.vx > 0) {
           player.x = platScreenX - PLAYER.WIDTH;
         } else if (player.vx < 0) {
@@ -318,14 +313,12 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
         break;
       }
 
-      // World bounds (horizontal)
       player.x = Math.max(0, Math.min(player.x, worldWidth - PLAYER.WIDTH));
 
       // --- Vertical update + collision ---
       player.y += player.vy;
       player.grounded = false;
 
-      // Ground collision
       const groundLevel = groundY - PLAYER.HEIGHT;
       if (player.y >= groundLevel) {
         player.y = groundLevel;
@@ -333,32 +326,27 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
         player.grounded = true;
       }
 
-      // Platform top collision -- sorted by height (highest first) for stacked books
       for (const platform of sortedPlatforms) {
         const platX = platform.x;
         const platY = groundY - platform.y - BOOK.HEIGHT;
-
         const playerBottom = player.y + PLAYER.HEIGHT;
         const playerRight = player.x + PLAYER.WIDTH;
-        const platTop = platY;
-        const platRight = platX + BOOK.WIDTH;
 
-        // Landing on top of platform (falling down)
         if (
           player.vy >= 0 &&
           playerRight > platX &&
-          player.x < platRight &&
-          playerBottom >= platTop &&
-          playerBottom <= platTop + 20
+          player.x < platX + BOOK.WIDTH &&
+          playerBottom >= platY &&
+          playerBottom <= platY + 20
         ) {
-          player.y = platTop - PLAYER.HEIGHT;
+          player.y = platY - PLAYER.HEIGHT;
           player.vy = 0;
           player.grounded = true;
           break;
         }
       }
 
-      // Flagpole check — unlock achievement + grant XP
+      // Flagpole
       if (!flagpoleReached && player.x + PLAYER.WIDTH >= flagpoleX) {
         setFlagpoleReached(true);
         unlock("book_climber");
@@ -376,30 +364,51 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
         player.walkFrame = 0;
       }
 
-      // Two-phase camera based on player distance from start
-      // Idle: player at 70% from left (right side of screen)
-      // Game: player at 25% from left (Mario-style forward visibility)
+      // Camera
       const startX = dimensions.width * 0.7;
       const distanceRight = Math.max(0, player.x - startX);
       const gameProgress = Math.min(1, distanceRight / 300);
 
-      // Report progress for text panel animation (throttled to reduce re-renders)
       if (Math.abs(gameProgress - lastProgressRef.current) > 0.02) {
         lastProgressRef.current = gameProgress;
         onGameStartRef.current?.(gameProgress);
       }
 
-      // Smooth camera lerp tracks progress
       cameraLerpRef.current += (gameProgress - cameraLerpRef.current) * 0.08;
       const t = cameraLerpRef.current;
-      const idleCameraTarget = player.x - dimensions.width * 0.7;
-      const gameCameraTarget = player.x - dimensions.width * 0.25;
-      const targetCamera = idleCameraTarget + (gameCameraTarget - idleCameraTarget) * t;
-      const newCameraX = Math.max(0, Math.min(targetCamera, worldWidth - dimensions.width));
-      setCameraX(newCameraX);
+      const idleCam = player.x - dimensions.width * 0.7;
+      const gameCam = player.x - dimensions.width * 0.25;
+      const targetCam = idleCam + (gameCam - idleCam) * t;
+      const newCameraX = Math.max(0, Math.min(targetCam, worldWidth - dimensions.width));
+      cameraXRef.current = newCameraX;
 
-      // Trigger re-render
-      setPlayerState({ ...player });
+      // ---- DIRECT DOM UPDATES (bypass React reconciliation) ----
+
+      // World container (ground, grass, platforms, flagpole all scroll together)
+      if (worldContainerRef.current) {
+        worldContainerRef.current.style.transform = `translateX(${-newCameraX}px)`;
+      }
+
+      // Background parallax
+      if (bgParallaxRef.current) {
+        bgParallaxRef.current.style.transform = `translateX(${-newCameraX * 0.03}px)`;
+      }
+
+      // Player position + scale
+      if (playerElementRef.current) {
+        const sx = player.grounded ? 1 : 0.95;
+        const sy = player.grounded ? 1 : 1.05;
+        playerElementRef.current.style.left = `${player.x - newCameraX}px`;
+        playerElementRef.current.style.top = `${player.y}px`;
+        playerElementRef.current.style.transform = `scaleX(${player.facingRight ? sx : -sx}) scaleY(${sy})`;
+      }
+
+      // Only trigger React re-render when visual state actually changes
+      const pv = prevVisualsRef.current;
+      if (player.walkFrame !== pv.walkFrame || player.facingRight !== pv.facingRight || player.grounded !== pv.grounded) {
+        prevVisualsRef.current = { walkFrame: player.walkFrame, facingRight: player.facingRight, grounded: player.grounded };
+        setPlayerVisuals({ ...prevVisualsRef.current });
+      }
     },
     [prefersReducedMotion, selectedBook, getInput, worldWidth, groundY, dimensions, sortedPlatforms, flagpoleX, flagpoleReached, unlock, addXP, play]
   );
@@ -426,71 +435,62 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
 
   return (
     <div ref={containerRef} className="absolute inset-0 overflow-hidden pointer-events-auto">
-      {/* Background buildings layer */}
-      <BackgroundLayer cameraX={cameraX} worldWidth={worldWidth} viewportWidth={dimensions.width} />
+      {/* Background buildings — parallax via ref */}
+      <div ref={bgParallaxRef} className="absolute inset-0" style={{ willChange: "transform" }}>
+        <BackgroundLayer />
+      </div>
 
-      {/* Stars layer */}
+      {/* Stars — CSS animations only (no Framer Motion) */}
       {showStars && (
         <div className="absolute inset-0" style={{ opacity: palette.starsOpacity }}>
           <StarsLayer prefersReducedMotion={prefersReducedMotion} />
         </div>
       )}
 
-      {/* Ground - full world width */}
-      <div
-        className="absolute bottom-0 left-0 h-[15%]"
-        style={{
-          width: worldWidth,
-          transform: `translateX(${-cameraX}px)`,
-        }}
-      >
-        <div className="absolute inset-0" style={{ backgroundColor: colors.ground1 }} />
-        <div className="absolute bottom-0 left-0 right-0 h-[60%]" style={{ backgroundColor: colors.ground2 }} />
-        <div className="absolute bottom-0 left-0 right-0 h-[20%]" style={{ backgroundColor: colors.groundDark }} />
-      </div>
+      {/* World container — scrolled via ref, all children in world-space */}
+      <div ref={worldContainerRef} className="absolute inset-0" style={{ willChange: "transform" }}>
+        {/* Ground */}
+        <div className="absolute bottom-0 left-0 h-[15%]" style={{ width: worldWidth }}>
+          <div className="absolute inset-0" style={{ backgroundColor: colors.ground1 }} />
+          <div className="absolute bottom-0 left-0 right-0 h-[60%]" style={{ backgroundColor: colors.ground2 }} />
+          <div className="absolute bottom-0 left-0 right-0 h-[20%]" style={{ backgroundColor: colors.groundDark }} />
+        </div>
 
-      {/* Grass tufts */}
-      <GrassDetails cameraX={cameraX} worldWidth={worldWidth} viewportWidth={dimensions.width} />
+        {/* Grass — world-space positions, no cameraX needed */}
+        <GrassDetails worldWidth={worldWidth} />
 
-      {/* Book platforms */}
-      {platforms.map((platform) => {
-        const platX = platform.x - cameraX;
-        const platY = groundY - platform.y - BOOK.HEIGHT;
-
-        // Only render if visible
-        if (platX < -120 || platX > dimensions.width + 120) return null;
-
-        return (
+        {/* Book platforms — world-space positions, never re-render during gameplay */}
+        {platforms.map((platform, i) => (
           <BookPlatformVisual
             key={platform.id}
             platform={platform}
-            x={platX}
-            y={platY}
+            x={platform.x}
+            y={platformScreenYs[i]}
             coverUrl={covers.get(platform.title)}
-            onClick={() => handleBookClick(platform)}
+            onBookClick={handleBookClick}
           />
-        );
-      })}
+        ))}
 
-      {/* Flagpole */}
-      <Flagpole
-        x={flagpoleX - cameraX}
-        groundY={groundY}
-        reached={flagpoleReached}
-      />
+        {/* Flagpole — world-space position */}
+        <Flagpole x={flagpoleX} groundY={groundY} reached={flagpoleReached} />
+      </div>
 
-      {/* Player character */}
-      <Character
-        x={playerState.x - cameraX}
-        y={playerState.y}
-        facingRight={playerState.facingRight}
-        walkFrame={playerState.walkFrame}
-        grounded={playerState.grounded}
-        prefersReducedMotion={prefersReducedMotion}
-      />
-
-      {/* Floating particles */}
-      {!prefersReducedMotion && <FloatingParticles />}
+      {/* Player — positioned via ref, outside world container */}
+      <div
+        ref={playerElementRef}
+        className="absolute"
+        style={{
+          width: PLAYER.WIDTH,
+          height: PLAYER.HEIGHT,
+          transformOrigin: "center bottom",
+          willChange: "transform, left, top",
+        }}
+      >
+        <CharacterSprite
+          walkFrame={playerVisuals.walkFrame}
+          facingRight={playerVisuals.facingRight}
+        />
+      </div>
 
       {/* UI */}
       <KeyboardHint visible={showKeyboardHint} />
@@ -513,6 +513,7 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
   );
 }
 
+// Pure CSS twinkle — no Framer Motion overhead
 function StarsLayer({ prefersReducedMotion }: { prefersReducedMotion: boolean | null }) {
   const stars = [
     { left: "5%", top: "8%", size: 8 },
@@ -531,8 +532,9 @@ function StarsLayer({ prefersReducedMotion }: { prefersReducedMotion: boolean | 
 
   return (
     <>
+      <style>{`@keyframes twinkle{0%,100%{opacity:.4}50%{opacity:1}}`}</style>
       {stars.map((star, i) => (
-        <motion.div
+        <div
           key={i}
           className="absolute"
           style={{
@@ -541,27 +543,16 @@ function StarsLayer({ prefersReducedMotion }: { prefersReducedMotion: boolean | 
             width: star.size,
             height: star.size,
             backgroundColor: i % 3 === 0 ? colors.starYellow : colors.starWhite,
+            animation: prefersReducedMotion ? "none" : `twinkle ${2 + (i % 3)}s ease-in-out ${i * 0.3}s infinite`,
           }}
-          animate={prefersReducedMotion ? {} : { opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 2 + (i % 3), repeat: Infinity, delay: i * 0.3 }}
         />
       ))}
     </>
   );
 }
 
-function BackgroundLayer({
-  cameraX,
-  worldWidth,
-  viewportWidth,
-}: {
-  cameraX: number;
-  worldWidth: number;
-  viewportWidth: number;
-}) {
-  // Parallax: buildings move at 30% of camera speed
-  const parallaxOffset = cameraX * 0.3;
-
+// Static background — no per-frame props
+function BackgroundLayer() {
   return (
     <div className="absolute inset-0">
       <svg
@@ -570,9 +561,7 @@ function BackgroundLayer({
         preserveAspectRatio="xMaxYMax meet"
         style={{ imageRendering: "pixelated" }}
       >
-        {/* Building cluster on right side */}
-        <g opacity="0.5" transform={`translate(${-parallaxOffset * 0.1}, 0)`}>
-          {/* Tall building - far right */}
+        <g opacity="0.5">
           <rect x="340" y="30" width="50" height="120" fill={colors.buildingDark} />
           <rect x="350" y="40" width="10" height="10" fill={colors.window} opacity="0.4" />
           <rect x="370" y="40" width="10" height="10" fill={colors.window} opacity="0.6" />
@@ -580,23 +569,16 @@ function BackgroundLayer({
           <rect x="370" y="60" width="10" height="10" fill={colors.window} opacity="0.5" />
           <rect x="350" y="80" width="10" height="10" fill={colors.window} opacity="0.4" />
           <rect x="370" y="80" width="10" height="10" fill={colors.window} opacity="0.3" />
-
-          {/* Medium building */}
           <rect x="280" y="60" width="45" height="90" fill={colors.buildingDark} />
           <rect x="290" y="70" width="8" height="8" fill={colors.window} opacity="0.5" />
           <rect x="305" y="70" width="8" height="8" fill={colors.window} opacity="0.4" />
           <rect x="290" y="90" width="8" height="8" fill={colors.window} opacity="0.3" />
-
-          {/* Small building */}
           <rect x="230" y="90" width="35" height="60" fill={colors.buildingDark} />
           <rect x="240" y="100" width="6" height="6" fill={colors.window} opacity="0.4" />
         </g>
-
-        {/* Buildings on far left for balance */}
-        <g opacity="0.35" transform={`translate(${-parallaxOffset * 0.1}, 0)`}>
+        <g opacity="0.35">
           <rect x="10" y="100" width="30" height="50" fill={colors.buildingDark} />
           <rect x="17" y="108" width="6" height="6" fill={colors.window} opacity="0.4" />
-
           <rect x="50" y="80" width="40" height="70" fill={colors.buildingDark} />
           <rect x="58" y="88" width="8" height="8" fill={colors.window} opacity="0.5" />
         </g>
@@ -605,7 +587,8 @@ function BackgroundLayer({
   );
 }
 
-function GrassDetails({ cameraX, worldWidth, viewportWidth }: { cameraX: number; worldWidth: number; viewportWidth: number }) {
+// Grass in world-space — no per-frame cameraX
+function GrassDetails({ worldWidth }: { worldWidth: number }) {
   const tufts = useMemo(() => {
     const result = [];
     for (let x = 0; x < worldWidth; x += 100 + Math.random() * 50) {
@@ -616,36 +599,22 @@ function GrassDetails({ cameraX, worldWidth, viewportWidth }: { cameraX: number;
 
   return (
     <>
-      {tufts.map((tuft, i) => {
-        const visualX = tuft.x - cameraX;
-        if (visualX < -20 || visualX > viewportWidth + 20) return null;
-
-        return (
-          <div key={i} className="absolute bottom-[15%]" style={{ left: visualX }}>
-            <svg width="16" height="20" viewBox="0 0 8 10" style={{ imageRendering: "pixelated" }}>
-              <rect x="2" y="0" width="2" height="8" fill={colors.accent1} opacity="0.6" />
-              {tuft.variant === "double" && (
-                <rect x="5" y="2" width="2" height="6" fill={colors.accent2} opacity="0.6" />
-              )}
-            </svg>
-          </div>
-        );
-      })}
+      {tufts.map((tuft, i) => (
+        <div key={i} className="absolute bottom-[15%]" style={{ left: tuft.x }}>
+          <svg width="16" height="20" viewBox="0 0 8 10" style={{ imageRendering: "pixelated" }}>
+            <rect x="2" y="0" width="2" height="8" fill={colors.accent1} opacity="0.6" />
+            {tuft.variant === "double" && (
+              <rect x="5" y="2" width="2" height="6" fill={colors.accent2} opacity="0.6" />
+            )}
+          </svg>
+        </div>
+      ))}
     </>
   );
 }
 
-interface CharacterProps {
-  x: number;
-  y: number;
-  facingRight: boolean;
-  walkFrame: number;
-  grounded: boolean;
-  prefersReducedMotion: boolean | null;
-}
-
-const Character = memo(function Character({ x, y, facingRight, walkFrame, grounded, prefersReducedMotion }: CharacterProps) {
-  // Leg animation offsets
+// Character SVG sprite — only re-renders when walkFrame or facingRight changes
+const CharacterSprite = memo(function CharacterSprite({ walkFrame, facingRight }: { walkFrame: number; facingRight: boolean }) {
   const legOffsets = [
     { left: 0, right: 0 },
     { left: -1, right: 1 },
@@ -654,91 +623,54 @@ const Character = memo(function Character({ x, y, facingRight, walkFrame, ground
   ];
   const offset = legOffsets[walkFrame] || legOffsets[0];
 
-  // Jump effect
-  const scaleX = grounded ? 1 : 0.95;
-  const scaleY = grounded ? 1 : 1.05;
-
   return (
-    <motion.div
-      className="absolute"
-      style={{
-        left: x,
-        top: y,
-        width: PLAYER.WIDTH,
-        height: PLAYER.HEIGHT,
-        transform: `scaleX(${facingRight ? scaleX : -scaleX}) scaleY(${scaleY})`,
-        transformOrigin: "center bottom",
-        willChange: "transform, left, top",
-      }}
-      animate={grounded && walkFrame === 0 && !prefersReducedMotion ? { y: [0, -3, 0] } : {}}
-      transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+    <svg
+      width="64"
+      height="80"
+      viewBox="0 0 16 20"
+      style={{ imageRendering: "pixelated", display: "block" }}
     >
-      <svg width="64" height="80" viewBox="0 0 16 20" style={{ imageRendering: "pixelated" }}>
-        {/* Shadow */}
-        <ellipse cx="8" cy="19" rx="5" ry="1.5" fill={colors.groundDark} opacity="0.4" />
-
-        {/* Hair */}
-        <rect x="4" y="0" width="8" height="2" fill="#5D4E37" />
-        <rect x="3" y="1" width="2" height="2" fill="#5D4E37" />
-        <rect x="11" y="1" width="2" height="2" fill="#5D4E37" />
-        <rect x="5" y="0" width="2" height="1" fill="#6B5B45" />
-        <rect x="9" y="0" width="2" height="1" fill="#6B5B45" />
-
-        {/* Head/Face */}
-        <rect x="4" y="2" width="8" height="7" fill="#FFD5B8" />
-        <rect x="3" y="3" width="1" height="5" fill="#FFD5B8" />
-        <rect x="12" y="3" width="1" height="5" fill="#FFD5B8" />
-
-        {/* Hair bangs */}
-        <rect x="4" y="2" width="3" height="2" fill="#5D4E37" />
-        <rect x="9" y="2" width="3" height="2" fill="#5D4E37" />
-        <rect x="6" y="2" width="4" height="1" fill="#5D4E37" />
-
-        {/* Eyes */}
-        <rect x="5" y="5" width="2" height="2" fill="#2D3748" />
-        <rect x="9" y="5" width="2" height="2" fill="#2D3748" />
-        <rect x="5" y="5" width="1" height="1" fill="#FFFFFF" />
-        <rect x="9" y="5" width="1" height="1" fill="#FFFFFF" />
-
-        {/* Blush */}
-        <rect x="4" y="6" width="1" height="1" fill="#FFB6C1" opacity="0.6" />
-        <rect x="11" y="6" width="1" height="1" fill="#FFB6C1" opacity="0.6" />
-
-        {/* Smile */}
-        <rect x="7" y="7" width="2" height="1" fill="#E8A088" />
-
-        {/* Neck */}
-        <rect x="6" y="9" width="4" height="1" fill="#F5C9A8" />
-
-        {/* Body/Shirt */}
-        <rect x="4" y="10" width="8" height="5" fill={colors.char1} />
-        <rect x="3" y="10" width="1" height="4" fill={colors.char1} />
-        <rect x="12" y="10" width="1" height="4" fill={colors.char1} />
-        <rect x="6" y="10" width="4" height="1" fill={colors.char2} />
-
-        {/* Belt */}
-        <rect x="4" y="14" width="8" height="1" fill="#8B7355" />
-        <rect x="7" y="14" width="2" height="1" fill="#D4AF37" />
-
-        {/* Arms */}
-        <rect x="2" y="10" width="2" height="4" fill={colors.char1} />
-        <rect x="12" y="10" width="2" height="4" fill={colors.char1} />
-        <rect x="2" y="13" width="2" height="2" fill="#FFD5B8" />
-        <rect x="12" y="13" width="2" height="2" fill="#FFD5B8" />
-
-        {/* Legs with animation */}
-        <g transform={`translate(${offset.left}, 0)`}>
-          <rect x="5" y="15" width="3" height="4" fill="#4A5568" />
-          <rect x="4" y="18" width="4" height="2" fill="#5D4E37" />
-          <rect x="4" y="18" width="4" height="1" fill="#6B5B45" />
-        </g>
-        <g transform={`translate(${offset.right}, 0)`}>
-          <rect x="8" y="15" width="3" height="4" fill="#4A5568" />
-          <rect x="8" y="18" width="4" height="2" fill="#5D4E37" />
-          <rect x="8" y="18" width="4" height="1" fill="#6B5B45" />
-        </g>
-      </svg>
-    </motion.div>
+      <ellipse cx="8" cy="19" rx="5" ry="1.5" fill={colors.groundDark} opacity="0.4" />
+      <rect x="4" y="0" width="8" height="2" fill="#5D4E37" />
+      <rect x="3" y="1" width="2" height="2" fill="#5D4E37" />
+      <rect x="11" y="1" width="2" height="2" fill="#5D4E37" />
+      <rect x="5" y="0" width="2" height="1" fill="#6B5B45" />
+      <rect x="9" y="0" width="2" height="1" fill="#6B5B45" />
+      <rect x="4" y="2" width="8" height="7" fill="#FFD5B8" />
+      <rect x="3" y="3" width="1" height="5" fill="#FFD5B8" />
+      <rect x="12" y="3" width="1" height="5" fill="#FFD5B8" />
+      <rect x="4" y="2" width="3" height="2" fill="#5D4E37" />
+      <rect x="9" y="2" width="3" height="2" fill="#5D4E37" />
+      <rect x="6" y="2" width="4" height="1" fill="#5D4E37" />
+      <rect x="5" y="5" width="2" height="2" fill="#2D3748" />
+      <rect x="9" y="5" width="2" height="2" fill="#2D3748" />
+      <rect x="5" y="5" width="1" height="1" fill="#FFFFFF" />
+      <rect x="9" y="5" width="1" height="1" fill="#FFFFFF" />
+      <rect x="4" y="6" width="1" height="1" fill="#FFB6C1" opacity="0.6" />
+      <rect x="11" y="6" width="1" height="1" fill="#FFB6C1" opacity="0.6" />
+      <rect x="7" y="7" width="2" height="1" fill="#E8A088" />
+      <rect x="6" y="9" width="4" height="1" fill="#F5C9A8" />
+      <rect x="4" y="10" width="8" height="5" fill={colors.char1} />
+      <rect x="3" y="10" width="1" height="4" fill={colors.char1} />
+      <rect x="12" y="10" width="1" height="4" fill={colors.char1} />
+      <rect x="6" y="10" width="4" height="1" fill={colors.char2} />
+      <rect x="4" y="14" width="8" height="1" fill="#8B7355" />
+      <rect x="7" y="14" width="2" height="1" fill="#D4AF37" />
+      <rect x="2" y="10" width="2" height="4" fill={colors.char1} />
+      <rect x="12" y="10" width="2" height="4" fill={colors.char1} />
+      <rect x="2" y="13" width="2" height="2" fill="#FFD5B8" />
+      <rect x="12" y="13" width="2" height="2" fill="#FFD5B8" />
+      <g transform={`translate(${offset.left}, 0)`}>
+        <rect x="5" y="15" width="3" height="4" fill="#4A5568" />
+        <rect x="4" y="18" width="4" height="2" fill="#5D4E37" />
+        <rect x="4" y="18" width="4" height="1" fill="#6B5B45" />
+      </g>
+      <g transform={`translate(${offset.right}, 0)`}>
+        <rect x="8" y="15" width="3" height="4" fill="#4A5568" />
+        <rect x="8" y="18" width="4" height="2" fill="#5D4E37" />
+        <rect x="8" y="18" width="4" height="1" fill="#6B5B45" />
+      </g>
+    </svg>
   );
 });
 
@@ -747,38 +679,33 @@ interface BookPlatformVisualProps {
   x: number;
   y: number;
   coverUrl?: string;
-  onClick: () => void;
+  onBookClick: (platform: Platform) => void;
 }
 
-const BookPlatformVisual = memo(function BookPlatformVisual({ platform, x, y, coverUrl, onClick }: BookPlatformVisualProps) {
+const BookPlatformVisual = memo(function BookPlatformVisual({ platform, x, y, coverUrl, onBookClick }: BookPlatformVisualProps) {
   return (
     <div
-      className="absolute cursor-pointer hover:brightness-110 transition-all"
-      style={{ left: x, top: y, width: BOOK.WIDTH, height: BOOK.HEIGHT, willChange: "left" }}
-      onClick={onClick}
+      className="absolute cursor-pointer hover:brightness-110 transition-[filter]"
+      style={{ left: x, top: y, width: BOOK.WIDTH, height: BOOK.HEIGHT }}
+      onClick={() => onBookClick(platform)}
       role="button"
       tabIndex={0}
       aria-label={`${platform.title} by ${platform.author}`}
     >
-      {/* 3D Book effect */}
       <div className="relative w-full h-full">
-        {/* Spine */}
         <div
           className="absolute left-0 top-0 w-2 h-full"
           style={{ backgroundColor: platform.color, filter: "brightness(0.7)" }}
         />
-        {/* Cover */}
         <div
           className="absolute left-2 top-0 h-full overflow-hidden rounded-r"
           style={{ width: BOOK.WIDTH - 8, backgroundColor: platform.color }}
         >
-          {/* Fallback: always rendered underneath */}
           <div className="w-full h-full flex items-center justify-center p-1">
             <span className="text-white text-[9px] text-center font-bold leading-tight drop-shadow">
               {platform.title.length > 18 ? platform.title.slice(0, 18) + "..." : platform.title}
             </span>
           </div>
-          {/* Cover image overlays fallback; hides on error */}
           {coverUrl && (
             <img
               src={coverUrl}
@@ -789,7 +716,6 @@ const BookPlatformVisual = memo(function BookPlatformVisual({ platform, x, y, co
             />
           )}
         </div>
-        {/* Top edge highlight */}
         <div
           className="absolute left-0 top-0 w-full h-1"
           style={{ backgroundColor: platform.color, filter: "brightness(1.2)" }}
@@ -811,13 +737,9 @@ function Flagpole({ x, groundY, reached }: FlagpoleProps) {
 
   return (
     <div className="absolute" style={{ left: x, top: poleTop }}>
-      {/* Pole */}
       <div className="absolute left-1 top-0 w-1.5" style={{ height: poleHeight, backgroundColor: "#94A3B8" }} />
-      {/* Pole highlight */}
       <div className="absolute left-1.5 top-0 w-0.5" style={{ height: poleHeight, backgroundColor: "#CBD5E1" }} />
-      {/* Top ball */}
       <div className="absolute -left-0.5 -top-3 w-5 h-5 rounded-full" style={{ backgroundColor: "#D4AF37", boxShadow: "0 0 8px #D4AF37" }} />
-      {/* Flag */}
       <motion.div
         className="absolute left-3"
         initial={{ top: poleHeight - 60 }}
@@ -832,7 +754,6 @@ function Flagpole({ x, groundY, reached }: FlagpoleProps) {
           <span className="absolute inset-0 flex items-center justify-center text-yellow-300 text-base font-bold" style={{ paddingRight: 8 }}>★</span>
         </div>
       </motion.div>
-      {/* Base platform */}
       <div
         className="absolute -left-4 w-12 h-3 rounded"
         style={{ top: poleHeight - 3, backgroundColor: colors.building2 }}
@@ -842,28 +763,5 @@ function Flagpole({ x, groundY, reached }: FlagpoleProps) {
         style={{ top: poleHeight - 5, backgroundColor: "#94A3B8" }}
       />
     </div>
-  );
-}
-
-function FloatingParticles() {
-  const particles = [
-    { left: "20%", bottom: "25%", delay: 0 },
-    { left: "30%", bottom: "30%", delay: 1 },
-    { left: "70%", bottom: "28%", delay: 0.5 },
-    { left: "80%", bottom: "22%", delay: 1.5 },
-  ];
-
-  return (
-    <>
-      {particles.map((p, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-2 h-2"
-          style={{ left: p.left, bottom: p.bottom, backgroundColor: i % 2 === 0 ? colors.accent1 : colors.purple1 }}
-          animate={{ y: [0, -60, 0], opacity: [0, 1, 0] }}
-          transition={{ duration: 3, repeat: Infinity, delay: p.delay }}
-        />
-      ))}
-    </>
   );
 }
