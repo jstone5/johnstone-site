@@ -7,7 +7,8 @@ export type AchievementId =
   | "completionist"
   | "secret_keys"
   | "sound_on"
-  | "night_owl";
+  | "night_owl"
+  | "book_climber";
 
 export interface Achievement {
   id: AchievementId;
@@ -68,6 +69,12 @@ export const achievements: Achievement[] = [
     description: "Visit between midnight and 5am",
     icon: "🦉",
     secret: true,
+  },
+  {
+    id: "book_climber",
+    title: "Book Climber",
+    description: "Complete the reading journey",
+    icon: "📚",
   },
 ];
 

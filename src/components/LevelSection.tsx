@@ -9,12 +9,28 @@ interface LevelSectionProps {
   children: React.ReactNode;
   className?: string;
   isActive?: boolean;
+  immersive?: boolean;
 }
 
 export const LevelSection = forwardRef<HTMLElement, LevelSectionProps>(
-  function LevelSection({ id, children, className = "", isActive }, ref) {
+  function LevelSection({ id, children, className = "", isActive, immersive }, ref) {
     const prefersReducedMotion = useReducedMotion();
 
+    // Immersive mode: full screen, no padding, no max-width constraints
+    if (immersive) {
+      return (
+        <section
+          ref={ref}
+          id={id}
+          data-level={id}
+          className={`level-section min-h-screen relative ${className}`}
+        >
+          {children}
+        </section>
+      );
+    }
+
+    // Standard section layout
     return (
       <section
         ref={ref}

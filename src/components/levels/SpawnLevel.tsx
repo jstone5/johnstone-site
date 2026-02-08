@@ -1,15 +1,19 @@
 "use client";
 
-import { useRef } from "react";
+import { useState, useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { PixelButton } from "@/components/PixelButton";
 import { TypingEffect } from "@/components/TypingEffect";
-import { HeroScene, CelestialBody } from "@/components/pixel-art";
+import { ImmersiveHeroSceneWithGame, CelestialBody } from "@/components/pixel-art";
 import { site } from "@/content/site";
 
 export function SpawnLevel() {
   const prefersReducedMotion = useReducedMotion();
-  const heroSceneRef = useRef<HTMLDivElement>(null);
+  const [gameProgress, setGameProgress] = useState(0);
+
+  const handleGameProgress = useCallback((progress: number) => {
+    setGameProgress(progress);
+  }, []);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -32,82 +36,78 @@ export function SpawnLevel() {
   };
 
   return (
-    <motion.div
-      className="grid lg:grid-cols-2 gap-8 items-center"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      {/* Hero pixel art scene - hidden on mobile, shown on desktop */}
-      <motion.div
-        className="hidden lg:block order-2"
-        variants={itemVariants}
-      >
-        <div className="relative">
-          <HeroScene
-            ref={heroSceneRef}
-            className="rounded-lg overflow-hidden border-2 border-[var(--border)] shadow-[0_0_30px_rgba(78,205,196,0.15)]"
-          />
-          {/* Decorative corners */}
-          <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-[var(--accent)]" />
-          <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-[var(--accent)]" />
-          <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-[var(--accent)]" />
-          <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-[var(--accent)]" />
-        </div>
-      </motion.div>
+    <div className="relative w-full min-h-screen">
+      {/* Immersive background scene with integrated platformer game */}
+      <ImmersiveHeroSceneWithGame onGameStart={handleGameProgress} />
 
       {/* Sun/Moon that detaches from scene and follows scroll */}
-      <CelestialBody sceneRef={heroSceneRef} />
+      <CelestialBody />
 
-      {/* Text content */}
-      <div className="text-center lg:text-left order-1">
-      <motion.h1
-        className="font-[family-name:var(--font-pixelify-sans)] text-4xl sm:text-5xl lg:text-6xl text-[var(--text)] mb-4"
-        variants={itemVariants}
-      >
-        {site.name}
-      </motion.h1>
-
-      <motion.p
-        className="text-xl sm:text-2xl text-[var(--accent)] mb-8 font-medium min-h-[2em]"
-        variants={itemVariants}
-      >
-        <TypingEffect text={site.tagline} delay={800} speed={40} />
-      </motion.p>
-
-      <motion.p
-        className="text-[var(--muted)] text-lg leading-relaxed max-w-2xl mx-auto lg:mx-0 mb-8"
-        variants={itemVariants}
-      >
-        I build products that help small businesses move money with less friction.
-        I&apos;m a Staff Product Manager at Intuit (QuickBooks Payments), I&apos;m building
-        Trove on the side, and I write about product craft, AI, and the systems we
-        live inside.
-      </motion.p>
-
+      {/* Text content panel -- slides off when game starts */}
       <motion.div
-        className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8"
-        variants={itemVariants}
+        className="relative z-10 flex items-center justify-start min-h-screen px-4 sm:px-6 lg:px-8 py-16 pointer-events-none"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
       >
-        <PixelButton href="#writing" variant="primary" glow>
-          Read writing
-        </PixelButton>
-        <PixelButton
-          href={site.links.substack}
-          variant="secondary"
-          external
+        <div
+          className="w-full max-w-2xl lg:ml-8 xl:ml-16"
+          style={{
+            transform: `translateX(${gameProgress * -600}px)`,
+            opacity: 1 - gameProgress,
+            pointerEvents: gameProgress > 0.5 ? "none" : "auto",
+          }}
         >
-          Subscribe on Substack
-        </PixelButton>
-      </motion.div>
+          {/* Semi-transparent panel for text readability */}
+          <div className="bg-[var(--bg)]/85 backdrop-blur-sm rounded-lg p-6 sm:p-8 border border-[var(--border)]/50 shadow-lg">
+            <motion.h1
+              className="font-[family-name:var(--font-pixelify-sans)] text-4xl sm:text-5xl lg:text-6xl text-[var(--text)] mb-4"
+              variants={itemVariants}
+            >
+              {site.name}
+            </motion.h1>
 
-      <motion.p
-        className="text-sm text-[var(--muted)]/70"
-        variants={itemVariants}
-      >
-        Based in the Bay Area. I&apos;m always happy to meet thoughtful builders.
-      </motion.p>
-      </div>
-    </motion.div>
+            <motion.p
+              className="text-xl sm:text-2xl text-[var(--accent)] mb-8 font-medium min-h-[2em]"
+              variants={itemVariants}
+            >
+              <TypingEffect text={site.tagline} delay={800} speed={40} />
+            </motion.p>
+
+            <motion.p
+              className="text-[var(--muted)] text-lg leading-relaxed mb-8"
+              variants={itemVariants}
+            >
+              &ldquo;Claude, rebuild my personal site into a video game.&rdquo;
+              <br /><br />
+              While the look has evolved, the goal remains: just as an artist builds a portfolio of works, this site is an attempt to build a portfolio of my thinking.
+            </motion.p>
+
+            <motion.div
+              className="flex flex-col sm:flex-row gap-4 mb-8"
+              variants={itemVariants}
+            >
+              <PixelButton href="#writing" variant="primary" glow>
+                Read writing
+              </PixelButton>
+              <PixelButton
+                href={site.links.substack}
+                variant="secondary"
+                external
+              >
+                Subscribe on Substack
+              </PixelButton>
+            </motion.div>
+
+            <motion.p
+              className="text-sm text-[var(--muted)]/70"
+              variants={itemVariants}
+            >
+              Builder. Writer. Product Leader. Based in the SF Bay Area.
+            </motion.p>
+          </div>
+        </div>
+      </motion.div>
+    </div>
   );
 }

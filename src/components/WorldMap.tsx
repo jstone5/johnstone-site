@@ -9,7 +9,6 @@ import { useXP, XP_REWARDS } from "@/contexts/XPContext";
 import {
   SpawnIcon,
   KnowledgeIcon,
-  QuestIcon,
   ArchiveIcon,
   TreasureIcon,
   MessageIcon,
@@ -29,11 +28,6 @@ const LOCATIONS: Record<LevelId, { name: string; Icon: IconComponent; descriptio
     name: "Knowledge Tower",
     Icon: KnowledgeIcon,
     description: "Learn about the adventurer",
-  },
-  work: {
-    name: "Quest Board",
-    Icon: QuestIcon,
-    description: "View completed quests",
   },
   writing: {
     name: "Archive Library",
@@ -64,7 +58,7 @@ interface WorldMapProps {
 export function WorldMap({ activeLevel, onLevelClick, visitedLevels }: WorldMapProps) {
   const isClient = useIsClient();
   const prefersReducedMotion = useReducedMotion();
-  const [prevLevel, setPrevLevel] = useState<LevelId>(activeLevel);
+  const prevLevelRef = useRef<LevelId>(activeLevel);
   const [isMoving, setIsMoving] = useState(false);
   const { play, init } = useSound();
   const { addXP } = useXP();
@@ -93,15 +87,16 @@ export function WorldMap({ activeLevel, onLevelClick, visitedLevels }: WorldMapP
       return;
     }
 
-    if (activeLevel !== prevLevel) {
+    if (activeLevel !== prevLevelRef.current) {
       const now = Date.now();
       // Throttle level changes - minimum 800ms between level transitions
       if (now - lastLevelChangeTime.current < 800) {
         return;
       }
       lastLevelChangeTime.current = now;
-      setPrevLevel(activeLevel);
+      prevLevelRef.current = activeLevel;
 
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsMoving(true);
       // NOTE: Don't play sounds here - scroll-triggered level changes should be silent
       // The menuSelect sound plays on intentional clicks via handleLocationClick
@@ -118,7 +113,7 @@ export function WorldMap({ activeLevel, onLevelClick, visitedLevels }: WorldMapP
       const timeout = setTimeout(() => setIsMoving(false), 500);
       return () => clearTimeout(timeout);
     }
-  }, [activeLevel, prevLevel, addXP]);
+  }, [activeLevel, addXP]);
 
   const handleLocationClick = (levelId: LevelId) => {
     init();

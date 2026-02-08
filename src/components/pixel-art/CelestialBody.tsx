@@ -4,64 +4,48 @@ import { useEffect, useState, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useSky } from "@/contexts/SkyContext";
 
-interface CelestialBodyProps {
-  // The container ref to track for positioning
-  sceneRef: React.RefObject<HTMLElement | null>;
-}
-
 /**
  * CelestialBody renders a sun or moon that:
- * - Starts positioned within the hero scene
+ * - Starts positioned in the upper area of the hero section (viewport-relative)
  * - Smoothly detaches and moves to a fixed corner position as user scrolls
  * - Returns to the scene when scrolling back up
  */
-export function CelestialBody({ sceneRef }: CelestialBodyProps) {
+export function CelestialBody() {
   const { isDay, palette } = useSky();
   const prefersReducedMotion = useReducedMotion();
 
   // Track scroll-based position (0 = in scene, 1 = fixed corner)
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [scenePosition, setScenePosition] = useState({ x: 0, y: 0 });
+  const [viewportWidth, setViewportWidth] = useState(0);
   const rafRef = useRef<number | null>(null);
+
+  // Starting position - upper right area of hero section
+  const getStartPosition = () => ({
+    x: viewportWidth * 0.85, // 85% from left
+    y: 120, // Fixed pixels from top
+  });
 
   // Fixed corner position (upper right, avoiding sidebar)
   const fixedPosition = {
-    x: typeof window !== "undefined" ? window.innerWidth - 80 : 0,
+    x: viewportWidth - 80,
     y: 60,
   };
 
-  // Update scene position and scroll progress
+  // Update scroll progress and viewport width
   useEffect(() => {
-    const updatePositions = () => {
-      if (!sceneRef.current) return;
+    const updateState = () => {
+      setViewportWidth(window.innerWidth);
 
-      const sceneRect = sceneRef.current.getBoundingClientRect();
-
-      // Check if scene is visible (not hidden on mobile)
-      if (sceneRect.width === 0 || sceneRect.height === 0) {
-        // Scene is hidden (mobile) - just stay in fixed position
-        setScrollProgress(1);
-        return;
-      }
-
-      // Position within the scene (upper right area of the pixel art)
-      // The scene is the container, so we position relative to viewport
-      // Position the celestial body inside the scene's sky area
-      const sceneX = sceneRect.right - 50; // 50px from right edge of scene
-      const sceneY = sceneRect.top + sceneRect.height * 0.2; // 20% from top of scene
-
-      setScenePosition({ x: sceneX, y: sceneY });
-
-      // Calculate scroll progress
-      // Start transitioning when scene top reaches 100px from viewport top
-      // Complete transition when scene top is at -200px (scrolled past)
+      // Calculate scroll progress based on how far we've scrolled past the hero
+      // Start transitioning after scrolling 100px
+      // Complete transition after scrolling 400px
+      const scrollY = window.scrollY;
       const startThreshold = 100;
-      const endThreshold = -200;
-      const sceneTop = sceneRect.top;
+      const endThreshold = 400;
 
       let progress = 0;
-      if (sceneTop < startThreshold) {
-        progress = Math.min(1, (startThreshold - sceneTop) / (startThreshold - endThreshold));
+      if (scrollY > startThreshold) {
+        progress = Math.min(1, (scrollY - startThreshold) / (endThreshold - startThreshold));
       }
 
       setScrollProgress(progress);
@@ -71,28 +55,30 @@ export function CelestialBody({ sceneRef }: CelestialBodyProps) {
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
       }
-      rafRef.current = requestAnimationFrame(updatePositions);
+      rafRef.current = requestAnimationFrame(updateState);
     };
 
     // Initial calculation
-    updatePositions();
+    updateState();
 
     // Listen to scroll and resize
     window.addEventListener("scroll", handleScroll, { passive: true });
-    window.addEventListener("resize", updatePositions);
+    window.addEventListener("resize", updateState);
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", updatePositions);
+      window.removeEventListener("resize", updateState);
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, [sceneRef]);
+  }, []);
 
-  // Interpolate between scene position and fixed position
-  const currentX = scenePosition.x + (fixedPosition.x - scenePosition.x) * scrollProgress;
-  const currentY = scenePosition.y + (fixedPosition.y - scenePosition.y) * scrollProgress;
+  const startPosition = getStartPosition();
+
+  // Interpolate between start position and fixed position
+  const currentX = startPosition.x + (fixedPosition.x - startPosition.x) * scrollProgress;
+  const currentY = startPosition.y + (fixedPosition.y - startPosition.y) * scrollProgress;
 
   // Scale down slightly when detached
   const scale = 1 - scrollProgress * 0.15;

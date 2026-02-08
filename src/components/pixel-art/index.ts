@@ -46,5 +46,11 @@ export {
   MiniScene,
 } from "./HeroScene";
 
+// Immersive Hero Scene (full-width background)
+export { ImmersiveHeroScene } from "./ImmersiveHeroScene";
+
+// Immersive Hero Scene with Book Platformer Game
+export { ImmersiveHeroSceneWithGame } from "./ImmersiveHeroSceneWithGame";
+
 // Celestial Body (scroll-linked sun/moon)
 export { CelestialBody } from "./CelestialBody";

@@ -9,7 +9,6 @@ import { StartOverlay } from "./StartOverlay";
 import { TransitionOverlay } from "./TransitionOverlay";
 import { SpawnLevel } from "./levels/SpawnLevel";
 import { AboutLevel } from "./levels/AboutLevel";
-import { WorkLevel } from "./levels/WorkLevel";
 import { WritingLevel } from "./levels/WritingLevel";
 import { LinksLevel } from "./levels/LinksLevel";
 import { SubscribeLevel } from "./levels/SubscribeLevel";
@@ -208,6 +207,7 @@ export function LevelJourney({ featuredPosts = [] }: LevelJourneyProps) {
           ref={setSectionRef("spawn")}
           id="spawn"
           isActive={activeLevel === "spawn"}
+          immersive
         >
           <SpawnLevel />
         </LevelSection>
@@ -219,14 +219,6 @@ export function LevelJourney({ featuredPosts = [] }: LevelJourneyProps) {
           className="bg-[var(--panel)]/30"
         >
           <AboutLevel />
-        </LevelSection>
-
-        <LevelSection
-          ref={setSectionRef("work")}
-          id="work"
-          isActive={activeLevel === "work"}
-        >
-          <WorkLevel />
         </LevelSection>
 
         <LevelSection

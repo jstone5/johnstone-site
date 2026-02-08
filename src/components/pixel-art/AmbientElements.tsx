@@ -325,9 +325,15 @@ export function PixelMoon({ position }: CelestialProps) {
 export function ShootingStar({ delay = 0 }: { delay?: number }) {
   const prefersReducedMotion = useReducedMotion();
 
-  // Random starting position
-  const startX = 10 + Math.random() * 60;
-  const startY = 5 + Math.random() * 30;
+  // Use seeded random based on delay for consistent positions
+  const position = useMemo(() => {
+    const seed = delay * 1000;
+    return {
+      startX: 10 + seededRandom(seed) * 60,
+      startY: 5 + seededRandom(seed + 1) * 30,
+      repeatDelay: 30 + seededRandom(seed + 2) * 60,
+    };
+  }, [delay]);
 
   if (prefersReducedMotion) return null;
 
@@ -335,8 +341,8 @@ export function ShootingStar({ delay = 0 }: { delay?: number }) {
     <motion.div
       className="absolute pointer-events-none"
       style={{
-        left: `${startX}%`,
-        top: `${startY}%`,
+        left: `${position.startX}%`,
+        top: `${position.startY}%`,
       }}
       initial={{ opacity: 0, x: 0, y: 0 }}
       animate={{
@@ -348,7 +354,7 @@ export function ShootingStar({ delay = 0 }: { delay?: number }) {
         duration: 1,
         delay: delay,
         repeat: Infinity,
-        repeatDelay: 30 + Math.random() * 60, // Random 30-90 seconds between
+        repeatDelay: position.repeatDelay,
         ease: "easeOut",
       }}
     >

@@ -1,6 +1,6 @@
 export const site = {
   name: "John Stone",
-  tagline: "Product leader in payments. Builder. Writer.",
+  tagline: "A portfolio of thoughts",
   description:
     "A pixel-modern personal site featuring a scroll-driven Level Journey, selected work, and writing synced from Substack.",
   substackFeedUrl: "https://johnstone.substack.com/feed",
@@ -69,7 +69,6 @@ export const site = {
 export const levels = [
   { id: "spawn", label: "Start" },
   { id: "about", label: "About" },
-  { id: "work", label: "Work" },
   { id: "writing", label: "Writing" },
   { id: "links", label: "Links" },
   { id: "subscribe", label: "Subscribe" },

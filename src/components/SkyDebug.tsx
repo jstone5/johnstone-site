@@ -17,11 +17,11 @@ export function SkyDebug() {
   const [isVisible, setIsVisible] = useState(false);
   const { phase, phaseName, sunPosition, isDay, palette } = useSky();
 
-  // Only render in development
-  if (process.env.NODE_ENV !== "development") return null;
-
-  // Toggle with keyboard
+  // Toggle with keyboard - must be called unconditionally
   useEffect(() => {
+    // Only enable in development
+    if (process.env.NODE_ENV !== "development") return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "d" && e.ctrlKey) {
         e.preventDefault();
@@ -31,6 +31,9 @@ export function SkyDebug() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  // Only render in development
+  if (process.env.NODE_ENV !== "development") return null;
 
   // Navigate to different phase
   const goToPhase = (newPhase: SkyPhase) => {

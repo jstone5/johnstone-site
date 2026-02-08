@@ -88,7 +88,7 @@ export function XPProvider({ children }: { children: ReactNode }) {
   // Track which XP grants have already been given (prevents duplicates)
   const grantedReasons = useRef<Set<string>>(new Set());
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount - initializing state from external storage
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -101,6 +101,7 @@ export function XPProvider({ children }: { children: ReactNode }) {
         const xpForCurrentLevel = getXPForLevel(level);
         const xpToNext = getXPToNextLevel(level);
 
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setState({
           totalXP: parsed.totalXP,
           level,
@@ -133,12 +134,13 @@ export function XPProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("johnstone-xp", JSON.stringify({ totalXP: state.totalXP }));
   }, [state.totalXP, isInitialized]);
 
-  // Handle level up effects
+  // Handle level up effects - dispatch event and clear pending state
   useEffect(() => {
     if (pendingLevelUp !== null) {
       play("achievement"); // Use achievement sound for level up
       // Dispatch custom event for level up overlay
       window.dispatchEvent(new CustomEvent("levelup", { detail: { level: pendingLevelUp } }));
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPendingLevelUp(null);
     }
   }, [pendingLevelUp, play]);

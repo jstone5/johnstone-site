@@ -18,6 +18,8 @@ export function XPBar() {
   }, []);
 
   // Show XP gain popup with proper cleanup
+  // This effect subscribes to external state changes (recentGains from context)
+  // and updates local state accordingly - a legitimate React pattern
   useEffect(() => {
     // Check if there's a new gain we haven't processed
     if (recentGains.length > 0) {
@@ -34,6 +36,7 @@ export function XPBar() {
         }
 
         // Show the toast
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setShowGain({ amount: latestGain.amount, reason: latestGain.reason });
 
         // Set timeout to hide after 3 seconds
