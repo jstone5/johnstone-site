@@ -6,41 +6,42 @@ import { GAME_CONFIG, BOOK_COLORS } from './physics';
 export interface BookData {
   title: string;
   author: string;
+  isbn?: string;
   amazonUrl?: string;
 }
 
-// The 28 books from the user's reading list
+// The 27 books from the user's reading list
 export const BOOKS_DATA: BookData[] = [
-  { title: "Abundance", author: "Peter Diamandis" },
-  { title: "The Accidental President", author: "A.J. Baime" },
-  { title: "Chip War", author: "Chris Miller" },
-  { title: "The Psychology of Money", author: "Morgan Housel" },
-  { title: "Elon Musk", author: "Walter Isaacson" },
-  { title: "The Smartest Guys in the Room", author: "Bethany McLean" },
-  { title: "Ready Player One", author: "Ernest Cline" },
-  { title: "Outlive", author: "Peter Attia" },
-  { title: "The Gifts of Imperfection", author: "Brene Brown" },
-  { title: "Unreasonable Hospitality", author: "Will Guidara" },
-  { title: "The Obstacle is the Way", author: "Ryan Holiday" },
-  { title: "This is Water", author: "David Foster Wallace" },
-  { title: "Four Thousand Weeks", author: "Oliver Burkeman" },
-  { title: "The Ruthless Elimination of Hurry", author: "John Mark Comer" },
-  { title: "The Almanack of Naval Ravikant", author: "Eric Jorgenson" },
-  { title: "Atomic Habits", author: "James Clear" },
-  { title: "Range", author: "David Epstein" },
-  { title: "Steve Jobs", author: "Walter Isaacson" },
-  { title: "Creativity Inc", author: "Ed Catmull" },
-  { title: "Zero to One", author: "Peter Thiel" },
-  { title: "So Good They Can't Ignore You", author: "Cal Newport" },
-  { title: "Antifragile", author: "Nassim Nicholas Taleb" },
-  { title: "The Black Swan", author: "Nassim Nicholas Taleb" },
-  { title: "Grit", author: "Angela Duckworth" },
-  { title: "Deep Work", author: "Cal Newport" },
-  { title: "The Alchemist", author: "Paulo Coelho" },
-  { title: "Love Does", author: "Bob Goff" },
+  { title: "Abundance", author: "Ezra Klein", isbn: "9781668064580" },
+  { title: "The Accidental President", author: "A.J. Baime", isbn: "9781328505682" },
+  { title: "Chip War", author: "Chris Miller", isbn: "9781982172008" },
+  { title: "The Psychology of Money", author: "Morgan Housel", isbn: "9780857197689" },
+  { title: "Elon Musk", author: "Walter Isaacson", isbn: "9781982181284" },
+  { title: "The Smartest Guys in the Room", author: "Bethany McLean", isbn: "9781591846604" },
+  { title: "Ready Player One", author: "Ernest Cline", isbn: "9780307887443" },
+  { title: "Outlive", author: "Peter Attia", isbn: "9780593236598" },
+  { title: "The Gifts of Imperfection", author: "Brene Brown", isbn: "9781592858491" },
+  { title: "Unreasonable Hospitality", author: "Will Guidara", isbn: "9780593418574" },
+  { title: "The Obstacle is the Way", author: "Ryan Holiday", isbn: "9781591846352" },
+  { title: "This is Water", author: "David Foster Wallace", isbn: "9780316068222" },
+  { title: "Four Thousand Weeks", author: "Oliver Burkeman", isbn: "9780374159122" },
+  { title: "The Ruthless Elimination of Hurry", author: "John Mark Comer", isbn: "9780525653097" },
+  { title: "The Almanack of Naval Ravikant", author: "Eric Jorgenson", isbn: "9781544514215" },
+  { title: "Atomic Habits", author: "James Clear", isbn: "9780735211292" },
+  { title: "Range", author: "David Epstein", isbn: "9780735214484" },
+  { title: "Steve Jobs", author: "Walter Isaacson", isbn: "9781451648539" },
+  { title: "Creativity Inc", author: "Ed Catmull", isbn: "9780812993011" },
+  { title: "Zero to One", author: "Peter Thiel", isbn: "9780804139298" },
+  { title: "So Good They Can't Ignore You", author: "Cal Newport", isbn: "9781455509126" },
+  { title: "Antifragile", author: "Nassim Nicholas Taleb", isbn: "9780812979688" },
+  { title: "The Black Swan", author: "Nassim Nicholas Taleb", isbn: "9780812973815" },
+  { title: "Grit", author: "Angela Duckworth", isbn: "9781501111112" },
+  { title: "Deep Work", author: "Cal Newport", isbn: "9781455586691" },
+  { title: "The Alchemist", author: "Paulo Coelho", isbn: "9780062315007" },
+  { title: "Love Does", author: "Bob Goff", isbn: "9781400203758" },
 ];
 
-// Generate platform positions for books
+// Generate platform positions for books (legacy — used by SVG BookPlatformer)
 export function generatePlatforms(
   startX: number,
   groundY: number
@@ -48,13 +49,12 @@ export function generatePlatforms(
   const platforms: BookPlatform[] = [];
   let currentX = startX;
 
-  // Create varied height patterns
   const heightPatterns = [
-    [0.6, 0.5, 0.4, 0.5, 0.6], // Valley
-    [0.4, 0.5, 0.6, 0.5, 0.4], // Hill
-    [0.5, 0.4, 0.5, 0.6, 0.5], // Zigzag
-    [0.4, 0.4, 0.5, 0.5, 0.6], // Ascending
-    [0.6, 0.5, 0.5, 0.4, 0.4], // Descending
+    [0.6, 0.5, 0.4, 0.5, 0.6],
+    [0.4, 0.5, 0.6, 0.5, 0.4],
+    [0.5, 0.4, 0.5, 0.6, 0.5],
+    [0.4, 0.4, 0.5, 0.5, 0.6],
+    [0.6, 0.5, 0.5, 0.4, 0.4],
   ];
 
   BOOKS_DATA.forEach((book, index) => {
@@ -62,12 +62,10 @@ export function generatePlatforms(
     const positionInPattern = index % 5;
     const heightMultiplier = heightPatterns[patternIndex][positionInPattern];
 
-    // Calculate Y position (higher multiplier = higher platform from ground)
     const maxHeight = groundY - GAME_CONFIG.BOOK_HEIGHT - 50;
     const minHeight = groundY - GAME_CONFIG.BOOK_HEIGHT - 250;
     const y = groundY - GAME_CONFIG.BOOK_HEIGHT - (maxHeight - minHeight) * heightMultiplier - 50;
 
-    // Vary spacing between books
     const spacing = GAME_CONFIG.BOOK_SPACING_MIN +
       Math.random() * (GAME_CONFIG.BOOK_SPACING_MAX - GAME_CONFIG.BOOK_SPACING_MIN);
 
@@ -89,71 +87,9 @@ export function generatePlatforms(
   return platforms;
 }
 
-// Fetch book cover from Google Books API
-export async function fetchBookCover(
-  title: string,
-  author: string
-): Promise<string | null> {
-  try {
-    const query = encodeURIComponent(`${title} ${author}`);
-    const response = await fetch(
-      `https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=1`
-    );
-
-    if (!response.ok) return null;
-
-    const data = await response.json();
-
-    if (data.items && data.items.length > 0) {
-      const volumeInfo = data.items[0].volumeInfo;
-      if (volumeInfo.imageLinks) {
-        // Prefer larger images, fall back to thumbnail
-        return (
-          volumeInfo.imageLinks.medium ||
-          volumeInfo.imageLinks.small ||
-          volumeInfo.imageLinks.thumbnail
-        )?.replace('http://', 'https://');
-      }
-    }
-
-    return null;
-  } catch (error) {
-    console.warn(`Failed to fetch cover for ${title}:`, error);
-    return null;
-  }
-}
-
-// Batch fetch book covers with rate limiting
-export async function fetchAllBookCovers(
-  books: BookData[],
-  batchSize: number = 5,
-  delayMs: number = 200
-): Promise<Map<string, string>> {
-  const covers = new Map<string, string>();
-
-  for (let i = 0; i < books.length; i += batchSize) {
-    const batch = books.slice(i, i + batchSize);
-
-    const results = await Promise.all(
-      batch.map(async (book) => {
-        const cover = await fetchBookCover(book.title, book.author);
-        return { title: book.title, cover };
-      })
-    );
-
-    results.forEach(({ title, cover }) => {
-      if (cover) {
-        covers.set(title, cover);
-      }
-    });
-
-    // Add delay between batches to avoid rate limiting
-    if (i + batchSize < books.length) {
-      await new Promise(resolve => setTimeout(resolve, delayMs));
-    }
-  }
-
-  return covers;
+// Get Open Library cover URL from ISBN
+export function getBookCoverUrl(isbn: string): string {
+  return `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`;
 }
 
 // Get Amazon search URL for a book

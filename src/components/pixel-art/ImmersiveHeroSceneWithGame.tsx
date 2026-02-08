@@ -76,20 +76,20 @@ const SECTION_TEMPLATES: Record<string, { dx: number; dy: number }[]> = {
   ],
   staircase_up: [
     { dx: 0, dy: 0 },
-    { dx: 90, dy: 90 },
-    { dx: 180, dy: 180 },
+    { dx: 90, dy: 70 },
+    { dx: 180, dy: 140 },
   ],
   staircase_down: [
-    { dx: 0, dy: 180 },
-    { dx: 90, dy: 90 },
+    { dx: 0, dy: 140 },
+    { dx: 90, dy: 70 },
     { dx: 180, dy: 0 },
   ],
   pyramid: [
     { dx: 0, dy: 0 },
     { dx: BOOK.WIDTH + 4, dy: 0 },
     { dx: (BOOK.WIDTH + 4) * 2, dy: 0 },
-    { dx: Math.floor((BOOK.WIDTH + 4) * 0.5), dy: BOOK.HEIGHT + 2 },
-    { dx: Math.floor((BOOK.WIDTH + 4) * 1.5), dy: BOOK.HEIGHT + 2 },
+    { dx: Math.floor((BOOK.WIDTH + 4) * 0.5), dy: 70 },
+    { dx: Math.floor((BOOK.WIDTH + 4) * 1.5), dy: 70 },
   ],
   gap_jump: [
     { dx: 0, dy: 0 },
@@ -303,8 +303,8 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
         const playerRight = player.x + PLAYER.WIDTH;
         const playerBottom = player.y + PLAYER.HEIGHT;
 
-        // Skip if no vertical overlap (tolerance at top for landing)
-        if (playerBottom <= platScreenY + 10 || player.y >= platBottom) continue;
+        // Skip if no vertical overlap (generous top tolerance for landing from side)
+        if (playerBottom <= platScreenY + 25 || player.y >= platBottom) continue;
         // Skip if no horizontal overlap
         if (playerRight <= platScreenX || player.x >= platRight) continue;
 
@@ -772,14 +772,21 @@ const BookPlatformVisual = memo(function BookPlatformVisual({ platform, x, y, co
           className="absolute left-2 top-0 h-full overflow-hidden rounded-r"
           style={{ width: BOOK.WIDTH - 8, backgroundColor: platform.color }}
         >
-          {coverUrl ? (
-            <img src={coverUrl} alt={platform.title} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center p-1">
-              <span className="text-white text-[9px] text-center font-bold leading-tight drop-shadow">
-                {platform.title.length > 18 ? platform.title.slice(0, 18) + "..." : platform.title}
-              </span>
-            </div>
+          {/* Fallback: always rendered underneath */}
+          <div className="w-full h-full flex items-center justify-center p-1">
+            <span className="text-white text-[9px] text-center font-bold leading-tight drop-shadow">
+              {platform.title.length > 18 ? platform.title.slice(0, 18) + "..." : platform.title}
+            </span>
+          </div>
+          {/* Cover image overlays fallback; hides on error */}
+          {coverUrl && (
+            <img
+              src={coverUrl}
+              alt={platform.title}
+              className="absolute inset-0 w-full h-full object-cover"
+              loading="lazy"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
           )}
         </div>
         {/* Top edge highlight */}
@@ -799,35 +806,40 @@ interface FlagpoleProps {
 }
 
 function Flagpole({ x, groundY, reached }: FlagpoleProps) {
-  if (x < -100 || x > 1500) return null;
-
-  const poleHeight = 150;
+  const poleHeight = 200;
   const poleTop = groundY - poleHeight;
 
   return (
     <div className="absolute" style={{ left: x, top: poleTop }}>
       {/* Pole */}
-      <div className="absolute left-0 top-0 w-2" style={{ height: poleHeight, backgroundColor: colors.building1 }} />
+      <div className="absolute left-1 top-0 w-1.5" style={{ height: poleHeight, backgroundColor: "#94A3B8" }} />
+      {/* Pole highlight */}
+      <div className="absolute left-1.5 top-0 w-0.5" style={{ height: poleHeight, backgroundColor: "#CBD5E1" }} />
       {/* Top ball */}
-      <div className="absolute -left-1 -top-2 w-4 h-4 rounded-full" style={{ backgroundColor: "#D4AF37" }} />
+      <div className="absolute -left-0.5 -top-3 w-5 h-5 rounded-full" style={{ backgroundColor: "#D4AF37", boxShadow: "0 0 8px #D4AF37" }} />
       {/* Flag */}
       <motion.div
-        className="absolute left-2"
+        className="absolute left-3"
         initial={{ top: poleHeight - 60 }}
-        animate={{ top: reached ? 8 : poleHeight - 60 }}
+        animate={{ top: reached ? 10 : poleHeight - 60 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
       >
-        <div
-          className="w-12 h-8 flex items-center justify-center"
-          style={{ backgroundColor: colors.accent1, clipPath: "polygon(0 0, 100% 50%, 0 100%)" }}
-        >
-          <span className="text-yellow-400 text-sm ml-1">★</span>
+        <div className="relative">
+          <div
+            className="w-16 h-10"
+            style={{ backgroundColor: colors.accent1, clipPath: "polygon(0 0, 100% 50%, 0 100%)" }}
+          />
+          <span className="absolute inset-0 flex items-center justify-center text-yellow-300 text-base font-bold" style={{ paddingRight: 8 }}>★</span>
         </div>
       </motion.div>
-      {/* Base */}
+      {/* Base platform */}
       <div
-        className="absolute -left-3 w-8 h-2 rounded"
-        style={{ top: poleHeight - 2, backgroundColor: colors.building2 }}
+        className="absolute -left-4 w-12 h-3 rounded"
+        style={{ top: poleHeight - 3, backgroundColor: colors.building2 }}
+      />
+      <div
+        className="absolute -left-3 w-10 h-1.5 rounded"
+        style={{ top: poleHeight - 5, backgroundColor: "#94A3B8" }}
       />
     </div>
   );

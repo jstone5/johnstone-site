@@ -1,31 +1,20 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { BOOKS_DATA, fetchAllBookCovers } from '@/lib/game/books';
+import { useMemo } from 'react';
+import { BOOKS_DATA, getBookCoverUrl } from '@/lib/game/books';
 
 export function useBookCovers() {
-  const [covers, setCovers] = useState<Map<string, string>>(new Map());
-  const [isLoading, setIsLoading] = useState(true);
-  const fetchedRef = useRef(false);
-
-  useEffect(() => {
-    // Prevent double-fetching in strict mode
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
-
-    async function loadCovers() {
-      try {
-        const coverMap = await fetchAllBookCovers(BOOKS_DATA, 5, 300);
-        setCovers(coverMap);
-      } catch (error) {
-        console.warn('Failed to load book covers:', error);
-      } finally {
-        setIsLoading(false);
+  // Build cover URL map from ISBNs — no API calls needed
+  // Open Library serves images directly from the ISBN URL
+  const covers = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const book of BOOKS_DATA) {
+      if (book.isbn) {
+        map.set(book.title, getBookCoverUrl(book.isbn));
       }
     }
-
-    loadCovers();
+    return map;
   }, []);
 
-  return { covers, isLoading };
+  return { covers, isLoading: false };
 }
