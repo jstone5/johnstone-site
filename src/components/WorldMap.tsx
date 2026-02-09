@@ -293,6 +293,9 @@ function MobileWorldMap({
   const activeLocation = LOCATIONS[activeLevel];
   const activeIndex = levels.findIndex((l) => l.id === activeLevel);
 
+  // Hide on spawn level to avoid overlapping with game controls
+  if (activeLevel === "spawn") return null;
+
   return (
     <div className="lg:hidden fixed bottom-12 left-0 right-0 z-40">
       {/* Expanded map overlay */}

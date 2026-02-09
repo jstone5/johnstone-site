@@ -16,29 +16,29 @@ interface SoundConfig {
 // Sound definitions - these create authentic 8-bit sounds
 const soundConfigs: Record<SoundType, SoundConfig[]> = {
   menuMove: [
-    { frequency: 440, duration: 0.05, type: 'square', volume: 0.15 },
+    { frequency: 440, duration: 0.05, type: 'square', volume: 0.06 },
   ],
   menuSelect: [
-    { frequency: 520, duration: 0.08, type: 'square', volume: 0.2 },
-    { frequency: 660, duration: 0.1, type: 'square', volume: 0.2, delay: 0.08 },
+    { frequency: 520, duration: 0.08, type: 'square', volume: 0.08 },
+    { frequency: 660, duration: 0.1, type: 'square', volume: 0.08, delay: 0.08 },
   ],
   levelEnter: [
-    { frequency: 330, duration: 0.1, type: 'square', volume: 0.15 },
-    { frequency: 440, duration: 0.1, type: 'square', volume: 0.15, delay: 0.1 },
-    { frequency: 550, duration: 0.15, type: 'square', volume: 0.15, delay: 0.2 },
+    { frequency: 330, duration: 0.1, type: 'square', volume: 0.06 },
+    { frequency: 440, duration: 0.1, type: 'square', volume: 0.06, delay: 0.1 },
+    { frequency: 550, duration: 0.15, type: 'square', volume: 0.06, delay: 0.2 },
   ],
   achievement: [
-    { frequency: 523, duration: 0.1, type: 'square', volume: 0.2 },
-    { frequency: 659, duration: 0.1, type: 'square', volume: 0.2, delay: 0.1 },
-    { frequency: 784, duration: 0.1, type: 'square', volume: 0.2, delay: 0.2 },
-    { frequency: 1047, duration: 0.2, type: 'square', volume: 0.25, delay: 0.3 },
+    { frequency: 523, duration: 0.1, type: 'square', volume: 0.08 },
+    { frequency: 659, duration: 0.1, type: 'square', volume: 0.08, delay: 0.1 },
+    { frequency: 784, duration: 0.1, type: 'square', volume: 0.08, delay: 0.2 },
+    { frequency: 1047, duration: 0.2, type: 'square', volume: 0.1, delay: 0.3 },
   ],
   typing: [
-    { frequency: 800, duration: 0.02, type: 'square', volume: 0.08 },
+    { frequency: 800, duration: 0.02, type: 'square', volume: 0.03 },
   ],
   xpGain: [
-    { frequency: 880, duration: 0.06, type: 'square', volume: 0.12 },
-    { frequency: 1100, duration: 0.08, type: 'square', volume: 0.1, delay: 0.05 },
+    { frequency: 880, duration: 0.06, type: 'square', volume: 0.05 },
+    { frequency: 1100, duration: 0.08, type: 'square', volume: 0.04, delay: 0.05 },
   ],
 };
 

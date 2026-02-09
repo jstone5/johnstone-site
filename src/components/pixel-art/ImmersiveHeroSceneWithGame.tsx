@@ -300,7 +300,7 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
         const playerRight = player.x + PLAYER.WIDTH;
         const playerBottom = player.y + PLAYER.HEIGHT;
 
-        if (playerBottom <= platScreenY + 25 || player.y >= platBottom) continue;
+        if (playerBottom <= platScreenY + 25 || player.y >= platBottom - 15) continue;
         if (playerRight <= platScreenX || player.x >= platRight) continue;
 
         if (player.vx > 0) {
@@ -342,6 +342,26 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
           player.vy = 0;
           player.grounded = true;
           break;
+        }
+      }
+
+      // Head bonk — player hits underside of a platform
+      if (player.vy < 0) {
+        for (const platform of sortedPlatforms) {
+          const platX = platform.x;
+          const platBottom = groundY - platform.y; // screen Y of bottom edge of book
+          const playerRight = player.x + PLAYER.WIDTH;
+
+          if (
+            playerRight > platX + 4 &&
+            player.x < platX + BOOK.WIDTH - 4 &&
+            player.y <= platBottom &&
+            player.y >= platBottom - 15
+          ) {
+            player.y = platBottom;
+            player.vy = 0;
+            break;
+          }
         }
       }
 

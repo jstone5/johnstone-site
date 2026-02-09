@@ -43,10 +43,10 @@ export function SpawnLevel() {
       {/* Sun/Moon that detaches from scene and follows scroll */}
       <CelestialBody />
 
-      {/* Nudge arrow + keyboard hint - encourages player to move right */}
+      {/* Nudge arrow + keyboard hint - encourages player to move right (desktop only) */}
       {gameProgress === 0 && (
         <div
-          className="absolute z-20 pointer-events-none flex flex-col items-center gap-2"
+          className="absolute z-20 pointer-events-none hidden sm:flex flex-col items-center gap-2"
           style={{ left: "76%", bottom: "14%" }}
         >
           {/* Keyboard hint */}
@@ -77,13 +77,13 @@ export function SpawnLevel() {
 
       {/* Text content panel -- slides off when game starts */}
       <motion.div
-        className="relative z-10 flex items-center justify-start min-h-screen px-4 sm:px-6 lg:px-8 py-16 pointer-events-none"
+        className="relative z-10 flex items-start sm:items-center justify-start min-h-screen px-3 sm:px-6 lg:px-8 pt-18 sm:py-16 pointer-events-none"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         <div
-          className="w-full max-w-2xl lg:ml-8 xl:ml-16"
+          className="w-full max-w-[300px] sm:max-w-lg lg:max-w-2xl lg:ml-8 xl:ml-16"
           style={{
             transform: `translateX(${gameProgress * -600}px)`,
             opacity: 1 - gameProgress,
@@ -91,23 +91,23 @@ export function SpawnLevel() {
           }}
         >
           {/* Semi-transparent panel for text readability */}
-          <div className="bg-[var(--panel)]/90 backdrop-blur-sm rounded-lg p-6 sm:p-8 border border-[var(--border)]/50 shadow-lg">
+          <div className="bg-[var(--panel)]/90 backdrop-blur-sm rounded-lg p-4 sm:p-6 lg:p-8 border border-[var(--border)]/50 shadow-lg">
             <motion.h1
-              className="font-[family-name:var(--font-pixelify-sans)] text-4xl sm:text-5xl lg:text-6xl text-[var(--text)] mb-4"
+              className="font-[family-name:var(--font-pixelify-sans)] text-2xl sm:text-5xl lg:text-6xl text-[var(--text)] mb-2 sm:mb-4"
               variants={itemVariants}
             >
               {site.name}
             </motion.h1>
 
             <motion.p
-              className="text-xl sm:text-2xl text-[var(--accent)] mb-8 font-medium min-h-[2em]"
+              className="text-base sm:text-2xl text-[var(--accent)] mb-4 sm:mb-8 font-medium min-h-[1.5em] sm:min-h-[2em]"
               variants={itemVariants}
             >
               <TypingEffect text={site.tagline} delay={800} speed={40} />
             </motion.p>
 
             <motion.p
-              className="text-[var(--muted)] text-lg leading-relaxed mb-8"
+              className="hidden sm:block text-[var(--muted)] text-lg leading-relaxed mb-8"
               variants={itemVariants}
             >
               &ldquo;Claude, rebuild my personal site into a video game.&rdquo;
@@ -116,7 +116,7 @@ export function SpawnLevel() {
             </motion.p>
 
             <motion.div
-              className="flex flex-col sm:flex-row gap-4 mb-8"
+              className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4 sm:mb-8"
               variants={itemVariants}
             >
               <PixelButton href="/game#writing" variant="primary" glow>
@@ -132,7 +132,7 @@ export function SpawnLevel() {
             </motion.div>
 
             <motion.p
-              className="text-sm text-[var(--muted)]/70"
+              className="text-xs sm:text-sm text-[var(--muted)]/70"
               variants={itemVariants}
             >
               Builder. Writer. Product Leader. Based in the SF Bay Area.

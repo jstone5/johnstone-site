@@ -29,21 +29,34 @@ export const MobileControls = memo(function MobileControls({
     handler();
   }, []);
 
-  const buttonClass = "w-16 h-16 rounded-full bg-[var(--panel)]/80 border-2 border-[var(--border)] flex items-center justify-center text-[var(--text)] active:bg-[var(--accent)]/30 active:border-[var(--accent)] touch-none select-none";
+  const handleMouseDown = useCallback((handler: () => void) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    handler();
+  }, []);
+
+  const handleMouseUp = useCallback((handler: () => void) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    handler();
+  }, []);
+
+  const buttonClass = "w-14 h-14 rounded-full bg-[var(--panel)]/70 border-2 border-[var(--accent)]/40 flex items-center justify-center text-[var(--accent)] active:bg-[var(--accent)]/30 active:border-[var(--accent)] active:scale-95 touch-none select-none transition-transform";
 
   return (
-    <div className="fixed bottom-4 left-0 right-0 px-4 flex justify-between items-end pointer-events-none z-40 md:hidden">
+    <div className="fixed bottom-16 left-0 right-0 px-5 flex justify-between items-end pointer-events-none z-40 md:hidden">
       {/* Direction buttons */}
-      <div className="flex gap-2 pointer-events-auto">
+      <div className="flex gap-3 pointer-events-auto">
         <button
           className={buttonClass}
           onTouchStart={handleTouchStart(onLeftStart)}
           onTouchEnd={handleTouchEnd(onLeftEnd)}
           onTouchCancel={handleTouchEnd(onLeftEnd)}
+          onMouseDown={handleMouseDown(onLeftStart)}
+          onMouseUp={handleMouseUp(onLeftEnd)}
+          onMouseLeave={handleMouseUp(onLeftEnd)}
           aria-label="Move left"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" fill="none" />
+          <svg width="22" height="22" viewBox="0 0 24 24">
+            <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
           </svg>
         </button>
         <button
@@ -51,24 +64,30 @@ export const MobileControls = memo(function MobileControls({
           onTouchStart={handleTouchStart(onRightStart)}
           onTouchEnd={handleTouchEnd(onRightEnd)}
           onTouchCancel={handleTouchEnd(onRightEnd)}
+          onMouseDown={handleMouseDown(onRightStart)}
+          onMouseUp={handleMouseUp(onRightEnd)}
+          onMouseLeave={handleMouseUp(onRightEnd)}
           aria-label="Move right"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" fill="none" />
+          <svg width="22" height="22" viewBox="0 0 24 24">
+            <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
           </svg>
         </button>
       </div>
 
       {/* Jump button */}
       <button
-        className={`${buttonClass} w-20 h-20 pointer-events-auto`}
+        className={`${buttonClass} w-16 h-16 pointer-events-auto`}
         onTouchStart={handleTouchStart(onJump)}
         onTouchEnd={handleTouchEnd(onJumpEnd)}
         onTouchCancel={handleTouchEnd(onJumpEnd)}
+        onMouseDown={handleMouseDown(onJump)}
+        onMouseUp={handleMouseUp(onJumpEnd)}
+        onMouseLeave={handleMouseUp(onJumpEnd)}
         aria-label="Jump"
       >
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" strokeWidth="2" fill="none" />
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
         </svg>
       </button>
     </div>

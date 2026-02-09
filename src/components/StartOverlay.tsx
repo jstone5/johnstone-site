@@ -162,7 +162,8 @@ export function StartOverlay() {
               transition={{ delay: 0.4 }}
             >
               Navigate through levels to explore my story, work, and writing.
-              Use keyboard arrows or scroll to move.
+              <span className="hidden sm:inline"> Use keyboard arrows or scroll to move.</span>
+              <span className="sm:hidden"> Use the on-screen controls to move and jump.</span>
             </motion.p>
 
             <motion.div
@@ -185,7 +186,8 @@ export function StartOverlay() {
               animate={prefersReducedMotion ? {} : { opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             >
-              PRESS ENTER OR SPACE TO START
+              <span className="hidden sm:inline">PRESS ENTER OR SPACE TO START</span>
+              <span className="sm:hidden">TAP TO START</span>
             </motion.p>
           </motion.div>
 
