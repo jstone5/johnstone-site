@@ -10,7 +10,6 @@ import { useGameInput } from "@/hooks/useGameInput";
 import { useBookCovers } from "@/hooks/useBookCovers";
 import { useXP, XP_REWARDS } from "@/contexts/XPContext";
 import { BOOKS_DATA } from "@/lib/game/books";
-import { BOOK_COLORS } from "@/lib/game/physics";
 import type { BookPlatform as BookPlatformType } from "@/lib/game/types";
 import { BookModal } from "@/components/game/BookModal";
 import { MobileControls, KeyboardHint } from "@/components/game/MobileControls";
@@ -76,20 +75,20 @@ const SECTION_TEMPLATES: Record<string, { dx: number; dy: number }[]> = {
   ],
   staircase_up: [
     { dx: 0, dy: 0 },
-    { dx: 90, dy: 70 },
-    { dx: 180, dy: 140 },
+    { dx: 150, dy: 85 },
+    { dx: 300, dy: 170 },
   ],
   staircase_down: [
-    { dx: 0, dy: 140 },
-    { dx: 90, dy: 70 },
-    { dx: 180, dy: 0 },
+    { dx: 0, dy: 170 },
+    { dx: 150, dy: 85 },
+    { dx: 300, dy: 0 },
   ],
   pyramid: [
     { dx: 0, dy: 0 },
-    { dx: BOOK.WIDTH + 4, dy: 0 },
-    { dx: (BOOK.WIDTH + 4) * 2, dy: 0 },
-    { dx: Math.floor((BOOK.WIDTH + 4) * 0.5), dy: 70 },
-    { dx: Math.floor((BOOK.WIDTH + 4) * 1.5), dy: 70 },
+    { dx: BOOK.WIDTH + 70, dy: 0 },
+    { dx: (BOOK.WIDTH + 70) * 2, dy: 0 },
+    { dx: Math.floor((BOOK.WIDTH + 70) * 0.5), dy: 85 },
+    { dx: Math.floor((BOOK.WIDTH + 70) * 1.5), dy: 85 },
   ],
   gap_jump: [
     { dx: 0, dy: 0 },
@@ -98,9 +97,9 @@ const SECTION_TEMPLATES: Record<string, { dx: number; dy: number }[]> = {
   ],
   mixed_heights: [
     { dx: 0, dy: 0 },
-    { dx: 90, dy: 50 },
-    { dx: 180, dy: 0 },
-    { dx: 270, dy: 50 },
+    { dx: 150, dy: 85 },
+    { dx: 300, dy: 0 },
+    { dx: 450, dy: 85 },
   ],
 };
 
@@ -182,7 +181,7 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
           author: book.author,
           x: sectionStartX + slot.dx,
           y: slot.dy,
-          color: BOOK_COLORS[bookIndex % BOOK_COLORS.length],
+          color: book.spineColor,
         });
         bookIndex++;
       }
@@ -692,15 +691,19 @@ const BookPlatformVisual = memo(function BookPlatformVisual({ platform, x, y, co
       tabIndex={0}
       aria-label={`${platform.title} by ${platform.author}`}
     >
-      <div className="relative w-full h-full">
+      {/* Thin black outline around entire book */}
+      <div className="relative w-full h-full" style={{ border: "1.5px solid #111" }}>
+        {/* Spine - theme-matched color */}
         <div
           className="absolute left-0 top-0 w-2 h-full"
-          style={{ backgroundColor: platform.color, filter: "brightness(0.7)" }}
+          style={{ backgroundColor: platform.color }}
         />
+        {/* Cover area */}
         <div
-          className="absolute left-2 top-0 h-full overflow-hidden rounded-r"
-          style={{ width: BOOK.WIDTH - 8, backgroundColor: platform.color }}
+          className="absolute left-2 top-0 h-full overflow-hidden"
+          style={{ width: BOOK.WIDTH - 8 - 1, backgroundColor: platform.color }}
         >
+          {/* Fallback text (visible when no cover loads) */}
           <div className="w-full h-full flex items-center justify-center p-1">
             <span className="text-white text-[9px] text-center font-bold leading-tight drop-shadow">
               {platform.title.length > 18 ? platform.title.slice(0, 18) + "..." : platform.title}
@@ -716,10 +719,6 @@ const BookPlatformVisual = memo(function BookPlatformVisual({ platform, x, y, co
             />
           )}
         </div>
-        <div
-          className="absolute left-0 top-0 w-full h-1"
-          style={{ backgroundColor: platform.color, filter: "brightness(1.2)" }}
-        />
       </div>
     </div>
   );

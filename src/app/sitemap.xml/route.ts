@@ -7,6 +7,7 @@ export async function GET() {
 
   const staticPages = [
     { url: "", priority: "1.0" },
+    { url: "/game", priority: "0.8" },
     { url: "/writing", priority: "0.8" },
   ];
 

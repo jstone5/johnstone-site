@@ -5,9 +5,10 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   const footerLinks = [
-    { label: "LinkedIn", href: site.links.linkedin },
-    { label: "Substack", href: site.links.substack },
-    { label: "X", href: site.links.x },
+    { label: "Home", href: "/", external: false },
+    { label: "LinkedIn", href: site.links.linkedin, external: true },
+    { label: "Substack", href: site.links.substack, external: true },
+    { label: "X", href: site.links.x, external: true },
   ].filter((link) => link.href);
 
   return (
@@ -23,8 +24,7 @@ export function Footer() {
               <span key={link.label} className="flex items-center gap-4">
                 <Link
                   href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  {...(link.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                   className="text-sm text-[var(--muted)] hover:text-[var(--text)] transition-colors"
                 >
                   {link.label}

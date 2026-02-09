@@ -43,6 +43,38 @@ export function SpawnLevel() {
       {/* Sun/Moon that detaches from scene and follows scroll */}
       <CelestialBody />
 
+      {/* Nudge arrow + keyboard hint - encourages player to move right */}
+      {gameProgress === 0 && (
+        <div
+          className="absolute z-20 pointer-events-none flex flex-col items-center gap-2"
+          style={{ left: "76%", bottom: "14%" }}
+        >
+          {/* Keyboard hint */}
+          <div className="flex items-center gap-1.5 bg-[var(--panel)]/80 backdrop-blur-sm rounded px-2.5 py-1.5 border border-[var(--border)]/50">
+            <kbd className="inline-flex items-center justify-center w-6 h-6 bg-[var(--panel)] rounded border border-[var(--border)] font-[family-name:var(--font-pixelify-sans)] text-[var(--accent)] text-xs">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M3 1.5L7.5 5L3 8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </kbd>
+            <span className="font-[family-name:var(--font-pixelify-sans)] text-[var(--muted)] text-xs">
+              to explore
+            </span>
+          </div>
+          {/* Animated chevrons */}
+          <div className="flex items-center gap-0.5">
+            <svg width="14" height="20" viewBox="0 0 14 20" className="nudge-arrow" aria-hidden="true">
+              <path d="M2 3L10 10L2 17" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="square" fill="none" />
+            </svg>
+            <svg width="14" height="20" viewBox="0 0 14 20" className="nudge-arrow-delayed" aria-hidden="true">
+              <path d="M2 3L10 10L2 17" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="square" fill="none" />
+            </svg>
+            <svg width="14" height="20" viewBox="0 0 14 20" className="nudge-arrow-delayed-2" aria-hidden="true">
+              <path d="M2 3L10 10L2 17" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="square" fill="none" />
+            </svg>
+          </div>
+        </div>
+      )}
+
       {/* Text content panel -- slides off when game starts */}
       <motion.div
         className="relative z-10 flex items-center justify-start min-h-screen px-4 sm:px-6 lg:px-8 py-16 pointer-events-none"
@@ -87,7 +119,7 @@ export function SpawnLevel() {
               className="flex flex-col sm:flex-row gap-4 mb-8"
               variants={itemVariants}
             >
-              <PixelButton href="#writing" variant="primary" glow>
+              <PixelButton href="/game#writing" variant="primary" glow>
                 Read writing
               </PixelButton>
               <PixelButton

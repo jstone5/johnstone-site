@@ -1,10 +1,11 @@
-import { LevelJourney } from "@/components/LevelJourney";
-import { getFeaturedPosts } from "@/lib/substack";
+import { getPosts } from "@/lib/substack";
+import { LandingContent } from "@/components/landing/LandingContent";
 
-export const revalidate = 3600; // Revalidate every hour
+export const revalidate = 3600;
 
-export default async function Home() {
-  const featuredPosts = await getFeaturedPosts(4);
+export default async function LandingPage() {
+  const posts = await getPosts();
+  const recentPosts = posts.slice(0, 5);
 
-  return <LevelJourney featuredPosts={featuredPosts} />;
+  return <LandingContent posts={recentPosts} />;
 }

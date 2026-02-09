@@ -5,9 +5,9 @@ import { site } from "@/content/site";
 import { SoundToggle } from "./SoundToggle";
 
 const navItems = [
-  { label: "About", href: "/#about" },
+  { label: "About", href: "/game#about" },
   { label: "Writing", href: "/writing" },
-  { label: "Subscribe", href: "/#subscribe" },
+  { label: "Subscribe", href: "/game#subscribe" },
 ];
 
 export function Nav() {
@@ -18,6 +18,7 @@ export function Nav() {
           <Link
             href="/"
             className="font-[family-name:var(--font-pixelify-sans)] text-lg text-[var(--text)] hover:text-[var(--accent)] transition-colors"
+            title="Back to home"
           >
             {site.name}
           </Link>

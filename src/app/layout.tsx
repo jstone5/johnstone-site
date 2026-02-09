@@ -3,11 +3,6 @@ import { Space_Grotesk, Pixelify_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import { site } from "@/content/site";
-import { Providers } from "@/components/Providers";
-import { Nav } from "@/components/Nav";
-import { Footer } from "@/components/Footer";
-import { ScrollToTop } from "@/components/ScrollToTop";
-import { AmbientBackground } from "@/components/pixel-art";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -50,17 +45,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <body
-        className={`${spaceGrotesk.variable} ${pixelifySans.variable} antialiased scanlines noise`}
+        className={`${spaceGrotesk.variable} ${pixelifySans.variable} antialiased`}
       >
-        <Providers>
-          <AmbientBackground variant="magical" density="medium" />
-          <Nav />
-          <main className="relative z-10">{children}</main>
-          <Footer />
-          <ScrollToTop />
-        </Providers>
+        {children}
         <Analytics />
       </body>
     </html>

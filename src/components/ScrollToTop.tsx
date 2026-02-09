@@ -33,7 +33,7 @@ export function ScrollToTop() {
           exit={{ opacity: 0, y: 20, scale: 0.8 }}
           transition={{ duration: 0.2, ease: "easeOut" as const }}
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 z-50 w-12 h-12 bg-[var(--panel)] border border-[var(--border)] pixel-corners flex items-center justify-center text-[var(--accent)] hover:text-[var(--accent2)] hover:border-[var(--accent)] hover:shadow-[0_0_15px_rgba(110,231,255,0.2)] transition-all lg:bottom-8 lg:right-8"
+          className="fixed bottom-16 right-4 z-40 w-10 h-10 bg-[var(--panel)] border border-[var(--border)] pixel-corners flex items-center justify-center text-[var(--accent)] hover:text-[var(--accent2)] hover:border-[var(--accent)] hover:shadow-[0_0_15px_rgba(110,231,255,0.2)] transition-all sm:right-6"
           aria-label="Scroll to top"
         >
           <svg

@@ -53,7 +53,7 @@ export function ErrorState({ type, onRetry }: ErrorStateProps) {
       )}
 
       {content.actionType === "internal" && (
-        <PixelButton href="/" variant="primary">
+        <PixelButton href="/game" variant="primary">
           {content.action}
         </PixelButton>
       )}

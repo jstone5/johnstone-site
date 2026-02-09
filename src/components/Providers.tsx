@@ -11,7 +11,6 @@ import { EasterEggs } from "./EasterEggs";
 import { XPBar } from "./XPBar";
 import { SkyTheme } from "./SkyTheme";
 import { SkyDebug } from "./SkyDebug";
-import { FloatingCompanion } from "./pixel-art";
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
@@ -26,7 +25,6 @@ export function Providers({ children }: { children: ReactNode }) {
             <LevelUpOverlay />
             <EasterEggs />
             <XPBar />
-            <FloatingCompanion />
           </XPProvider>
         </AchievementProvider>
       </SoundProvider>

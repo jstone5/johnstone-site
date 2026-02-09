@@ -49,24 +49,28 @@ html {
 }
 
 body {
+  font-family: var(--font-body);
+  min-height: 100svh;
+}
+
+/* Game theme - dark sky-driven background */
+.game-theme {
   background: linear-gradient(180deg, var(--bg) 0%, var(--bg-gradient) 100%);
   background-attachment: fixed;
   color: var(--text);
-  font-family: var(--font-body);
-  min-height: 100svh;
+  min-height: 100vh;
   transition: background 2s ease-out, color 1s ease-out;
 }
 
-/* Smooth transitions for all themed elements */
-*, *::before, *::after {
+/* Smooth transitions for sky-themed elements (game only) */
+.game-theme *, .game-theme *::before, .game-theme *::after {
   transition-property: background-color, border-color, color, box-shadow;
   transition-duration: 1s;
   transition-timing-function: ease-out;
 }
 
-/* Exclude animation and transform from the global transition */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  .game-theme *, .game-theme *::before, .game-theme *::after {
     transition-duration: 0s;
   }
 }
@@ -147,6 +151,62 @@ body {
   position: relative;
 }
 
+/* Nudge arrow animation - bounces right to encourage movement */
+@keyframes nudge-flow {
+  0%, 100% { transform: translateX(0); opacity: 0.3; }
+  50% { transform: translateX(10px); opacity: 0.8; }
+}
+
+.nudge-arrow {
+  animation: nudge-flow 1.2s ease-in-out infinite;
+}
+
+.nudge-arrow-delayed {
+  animation: nudge-flow 1.2s ease-in-out 0.2s infinite;
+}
+
+.nudge-arrow-delayed-2 {
+  animation: nudge-flow 1.2s ease-in-out 0.4s infinite;
+}
+
+/* Game CTA button on landing page - subtle idle pulse + hover shimmer */
+@keyframes game-cta-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(78, 205, 196, 0.15); }
+  50% { box-shadow: 0 0 16px rgba(78, 205, 196, 0.3), 0 0 32px rgba(78, 205, 196, 0.1); }
+}
+
+.game-cta {
+  animation: game-cta-pulse 2.5s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.game-cta::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(78, 205, 196, 0.2), transparent);
+  transition: none;
+  pointer-events: none;
+}
+
+.game-cta:hover::after {
+  animation: game-cta-shimmer 0.6s ease-out forwards;
+}
+
+@keyframes game-cta-shimmer {
+  0% { left: -60%; }
+  100% { left: 120%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-cta { animation: none; }
+  .game-cta:hover::after { animation: none; }
+}
+
 /* CRT flicker animation for transitions */
 @keyframes crt-flicker {
   0% { opacity: 0; }
@@ -189,28 +249,28 @@ body {
   animation: slide-up-fade 240ms ease-out forwards;
 }
 
-/* Selection color */
-::selection {
+/* Selection color (game theme) */
+.game-theme ::selection {
   background: var(--accent);
   color: var(--bg);
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
+/* Scrollbar styling (game theme) */
+.game-theme ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-::-webkit-scrollbar-track {
+.game-theme ::-webkit-scrollbar-track {
   background: var(--panel);
 }
 
-::-webkit-scrollbar-thumb {
+.game-theme ::-webkit-scrollbar-thumb {
   background: var(--muted);
   border-radius: 0;
 }
 
-::-webkit-scrollbar-thumb:hover {
+.game-theme ::-webkit-scrollbar-thumb:hover {
   background: var(--accent);
 }
 
