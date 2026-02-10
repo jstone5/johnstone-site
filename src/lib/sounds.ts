@@ -1,7 +1,7 @@
 // 8-bit Sound Generator using Web Audio API
 // Generates authentic retro game sounds programmatically
 
-type SoundType = 'menuMove' | 'menuSelect' | 'levelEnter' | 'achievement' | 'typing' | 'xpGain';
+type SoundType = 'menuMove' | 'menuSelect' | 'levelEnter' | 'achievement' | 'typing' | 'xpGain' | 'coinCollect';
 
 interface SoundConfig {
   frequency: number;
@@ -40,6 +40,10 @@ const soundConfigs: Record<SoundType, SoundConfig[]> = {
     { frequency: 880, duration: 0.06, type: 'square', volume: 0.05 },
     { frequency: 1100, duration: 0.08, type: 'square', volume: 0.04, delay: 0.05 },
   ],
+  coinCollect: [
+    { frequency: 988, duration: 0.06, type: 'square', volume: 0.07 },
+    { frequency: 1319, duration: 0.1, type: 'square', volume: 0.06, delay: 0.06 },
+  ],
 };
 
 // Cooldown times for different sounds (in milliseconds)
@@ -51,6 +55,7 @@ const SOUND_COOLDOWNS: Record<SoundType, number> = {
   achievement: 2000,  // Only one achievement sound every 2 seconds
   typing: 50,         // Allow rapid typing sounds
   xpGain: 500,        // Prevent XP sounds from stacking
+  coinCollect: 200,   // Quick but not spammable
 };
 
 class SoundManager {
@@ -64,6 +69,7 @@ class SoundManager {
     achievement: 0,
     typing: 0,
     xpGain: 0,
+    coinCollect: 0,
   };
   private lastAnySoundTime: number = 0; // Global cooldown for any sound
   private static readonly GLOBAL_COOLDOWN = 150; // Minimum ms between ANY sounds

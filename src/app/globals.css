@@ -157,6 +157,15 @@ body {
   50% { transform: translateX(10px); opacity: 0.8; }
 }
 
+/* Coin floating animation */
+@keyframes coin-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.coin-bob {
+  animation: coin-bob 1.5s ease-in-out infinite;
+}
+
 .nudge-arrow {
   animation: nudge-flow 1.2s ease-in-out infinite;
 }

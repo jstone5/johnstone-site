@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { soundManager } from "@/lib/sounds";
 
-type SoundType = 'menuMove' | 'menuSelect' | 'levelEnter' | 'achievement' | 'typing' | 'xpGain';
+type SoundType = 'menuMove' | 'menuSelect' | 'levelEnter' | 'achievement' | 'typing' | 'xpGain' | 'coinCollect';
 
 interface SoundContextType {
   enabled: boolean;

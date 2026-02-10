@@ -94,11 +94,11 @@ export function CharacterStats({
   className?: string;
 }) {
   const stats: Stat[] = [
-    { name: "PAYMENTS", value: 90, color: "accent" },
-    { name: "PRODUCT", value: 85, color: "accent" },
-    { name: "AI/ML", value: 75, color: "accent2" },
-    { name: "WRITING", value: 80, color: "accent" },
+    { name: "PRODUCT", value: 90, color: "accent" },
     { name: "BUILDING", value: 88, color: "accent2" },
+    { name: "WRITING", value: 85, color: "accent" },
+    { name: "FINTECH", value: 82, color: "accent" },
+    { name: "AI/ML", value: 75, color: "accent2" },
   ];
 
   return (

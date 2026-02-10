@@ -124,6 +124,14 @@ interface Platform {
   color: string;
 }
 
+// Coin data — positioned relative to specific book sections for discoverable placement
+const COIN_SIZE = 24;
+interface Coin {
+  id: string;
+  x: number; // world X
+  y: number; // height above ground in pixels
+}
+
 interface ImmersiveHeroSceneWithGameProps {
   onGameStart?: (progress: number) => void;
 }
@@ -142,6 +150,7 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
   const [showKeyboardHint, setShowKeyboardHint] = useState(true);
   const [selectedBook, setSelectedBook] = useState<BookPlatformType | null>(null);
   const [flagpoleReached, setFlagpoleReached] = useState(false);
+  const [collectedCoins, setCollectedCoins] = useState<Set<string>>(new Set());
 
   // Direct DOM refs for per-frame updates (no React state needed)
   const worldContainerRef = useRef<HTMLDivElement>(null);
@@ -194,6 +203,21 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
     return result;
   }, [dimensions.width]);
 
+  // Generate coins placed at interesting spots in the world
+  const coins = useMemo((): Coin[] => {
+    if (platforms.length < 10) return [];
+    return [
+      // Coin 1: Floating above the gap between ground_row_3 and staircase_up
+      { id: "coin-0", x: (platforms[2].x + platforms[3].x) / 2, y: 130 },
+      // Coin 2: At the peak of the staircase (above the highest step)
+      { id: "coin-1", x: platforms[5].x + BOOK.WIDTH / 2 - COIN_SIZE / 2, y: 260 },
+      // Coin 3: Above the middle gap_jump book
+      { id: "coin-2", x: platforms[11].x + BOOK.WIDTH / 2 - COIN_SIZE / 2, y: 140 },
+      // Coin 4: Above the pyramid peak
+      { id: "coin-3", x: (platforms[16].x + platforms[17].x) / 2, y: 220 },
+    ];
+  }, [platforms]);
+
   // Pre-compute screen Y for each platform (stable when groundY is stable)
   const platformScreenYs = useMemo(() => {
     return platforms.map((p) => groundY - p.y - BOOK.HEIGHT);
@@ -210,6 +234,12 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
     const lastPlatform = platforms[platforms.length - 1];
     return lastPlatform.x + BOOK.WIDTH + 200;
   }, [platforms]);
+
+  // Signpost position — just before the first book
+  const signpostX = useMemo(() => {
+    if (platforms.length === 0) return dimensions.width + 50;
+    return platforms[0].x - 100;
+  }, [platforms, dimensions.width]);
 
   const sortedPlatforms = useMemo(() => {
     return [...platforms].sort((a, b) => b.y - a.y);
@@ -365,6 +395,25 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
         }
       }
 
+      // Coin collection
+      for (const coin of coins) {
+        if (collectedCoins.has(coin.id)) continue;
+        const coinScreenY = groundY - coin.y - COIN_SIZE;
+        const playerRight = player.x + PLAYER.WIDTH;
+        const playerBottom = player.y + PLAYER.HEIGHT;
+        if (
+          playerRight > coin.x &&
+          player.x < coin.x + COIN_SIZE &&
+          playerBottom > coinScreenY &&
+          player.y < coinScreenY + COIN_SIZE
+        ) {
+          setCollectedCoins((prev) => new Set([...prev, coin.id]));
+          play("coinCollect");
+          addXP(XP_REWARDS.collectCoin, "Collected a coin!");
+          break;
+        }
+      }
+
       // Flagpole
       if (!flagpoleReached && player.x + PLAYER.WIDTH >= flagpoleX) {
         setFlagpoleReached(true);
@@ -429,7 +478,7 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
         setPlayerVisuals({ ...prevVisualsRef.current });
       }
     },
-    [prefersReducedMotion, selectedBook, getInput, worldWidth, groundY, dimensions, sortedPlatforms, flagpoleX, flagpoleReached, unlock, addXP, play]
+    [prefersReducedMotion, selectedBook, getInput, worldWidth, groundY, dimensions, sortedPlatforms, flagpoleX, flagpoleReached, unlock, addXP, play, coins, collectedCoins]
   );
 
   useGameLoop(updateGame, !prefersReducedMotion);
@@ -488,6 +537,16 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
             coverUrl={covers.get(platform.title)}
             onBookClick={handleBookClick}
           />
+        ))}
+
+        {/* Signpost — just before the books */}
+        <Signpost x={signpostX} groundY={groundY} />
+
+        {/* Floating coins */}
+        {coins.map((coin) => (
+          !collectedCoins.has(coin.id) && (
+            <CoinVisual key={coin.id} x={coin.x} y={groundY - coin.y - COIN_SIZE} />
+          )
         ))}
 
         {/* Flagpole — world-space position */}
@@ -743,6 +802,58 @@ const BookPlatformVisual = memo(function BookPlatformVisual({ platform, x, y, co
     </div>
   );
 });
+
+// Floating coin with CSS bob animation
+const CoinVisual = memo(function CoinVisual({ x, y }: { x: number; y: number }) {
+  return (
+    <div
+      className="absolute coin-bob"
+      style={{ left: x, top: y, width: COIN_SIZE, height: COIN_SIZE }}
+    >
+      <svg width={COIN_SIZE} height={COIN_SIZE} viewBox="0 0 24 24" style={{ imageRendering: "pixelated" }}>
+        {/* Outer ring */}
+        <circle cx="12" cy="12" r="11" fill="#D4AF37" />
+        <circle cx="12" cy="12" r="9" fill="#F5D442" />
+        {/* Inner highlight */}
+        <circle cx="10" cy="10" r="5" fill="#FBEAA0" opacity="0.5" />
+        {/* Dollar/star mark */}
+        <text x="12" y="16" textAnchor="middle" fill="#D4AF37" fontSize="11" fontWeight="bold" fontFamily="sans-serif">$</text>
+      </svg>
+    </div>
+  );
+});
+
+// Wooden signpost before the bookshelf
+function Signpost({ x, groundY }: { x: number; groundY: number }) {
+  const postHeight = 90;
+  const postTop = groundY - postHeight;
+
+  return (
+    <div className="absolute" style={{ left: x, top: postTop, width: 80 }}>
+      {/* Post */}
+      <div className="absolute left-[36px] top-[40px] w-[8px]" style={{ height: postHeight - 40, backgroundColor: "#8B6914" }}>
+        <div className="absolute left-[2px] top-0 w-[2px] h-full" style={{ backgroundColor: "#A0822A" }} />
+      </div>
+      {/* Sign board */}
+      <div
+        className="absolute left-0 top-0 w-[80px] h-[44px] flex items-center justify-center px-1"
+        style={{
+          backgroundColor: "#6B5B3E",
+          border: "2px solid #5D4E37",
+          borderRadius: "2px",
+        }}
+      >
+        <div className="absolute inset-0 opacity-20" style={{ backgroundColor: "#8B7355", clipPath: "polygon(0 0, 100% 0, 95% 100%, 5% 100%)" }} />
+        <span
+          className="relative text-[7px] text-center leading-tight font-bold"
+          style={{ color: "#F5E6C8", textShadow: "0 1px 0 #3A2E1E" }}
+        >
+          Books that shaped my thinking
+        </span>
+      </div>
+    </div>
+  );
+}
 
 interface FlagpoleProps {
   x: number;

@@ -5,12 +5,12 @@ import { DialogBox } from "@/components/DialogBox";
 import { CharacterStats } from "@/components/StatsPanel";
 
 const interests = [
-  "Payments + pricing",
-  "AI product craft",
-  "Building in public",
+  "Product craft",
+  "FinTech + payments",
+  "AI as a building tool",
   "Writing to think",
+  "Building in public",
   "Family + memory",
-  "Personal finance",
 ];
 
 export function AboutLevel() {
@@ -64,23 +64,24 @@ export function AboutLevel() {
           <DialogBox speaker="Bio" variant="npc">
             <div className="space-y-4 text-[var(--muted)] leading-relaxed">
               <p>
-                I&apos;m a product manager who likes messy, regulated problems: payments,
-                pricing, and the last mile between intent and money moving. At Intuit, I
-                work in QuickBooks Payments, where I&apos;ve led 0-to-1 and growth initiatives
-                across invoicing and payments experiences.
+                I love building products users love. As an experienced product leader,
+                I&apos;ve delivered $XXM impact across B2B and B2C contexts and in highly
+                regulated spaces like Payments. In my role at Intuit, I empower small
+                businesses by helping them bill and get paid by their customers.
               </p>
 
               <p>
-                Before Intuit, I built 0-to-1 internal products at Deloitte Consulting,
-                including systems used by government leaders to manage complex portfolios
-                and make high-stakes decisions. I also led applied AI work, including
-                model bias evaluations and computer vision prototypes.
+                Outside of work, I like building with and exploring AI. As a new dad, I
+                was surprised there were no digital baby books targeting fathers, so I
+                built one. <em>Trove</em> texts dads a prompt on fatherhood 2x per week;
+                they reply via SMS with a photo and reflection about a recent cherished
+                moment with their kids.
               </p>
 
               <p>
-                I earned my MBA at Kellogg and studied mechanical engineering at Clemson.
-                I write to think, and one of my essays on AI and product craft was
-                featured by Tyler Cowen&apos;s Marginal Revolution.
+                As a writer, I pen essays about product, AI, and peering into the future.
+                Much like an artist builds a portfolio of works, I write to build a
+                portfolio of my thinking.
               </p>
             </div>
           </DialogBox>

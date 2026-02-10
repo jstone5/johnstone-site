@@ -33,6 +33,7 @@ export const XP_REWARDS = {
   findSecret: 150,      // Finding a secret
   konamiCode: 300,      // Entering Konami code
   firstVisit: 25,       // First time on site
+  collectCoin: 20,     // Collecting a coin in the game
 } as const;
 
 // LocalStorage key for tracking granted XP reasons
