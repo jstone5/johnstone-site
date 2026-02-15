@@ -165,8 +165,8 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
   const lastProgressRef = useRef(0);
 
   // Player visual state — only updates when walk frame, facing, or grounded changes (~10fps)
-  const prevVisualsRef = useRef({ facingRight: true, walkFrame: 0, grounded: true });
-  const [playerVisuals, setPlayerVisuals] = useState({ facingRight: true, walkFrame: 0, grounded: true });
+  const prevVisualsRef = useRef({ facingRight: true, walkFrame: 0, grounded: true, isMoving: false });
+  const [playerVisuals, setPlayerVisuals] = useState({ facingRight: true, walkFrame: 0, grounded: true, isMoving: false });
 
   const groundY = dimensions.height * 0.85;
 
@@ -254,6 +254,7 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
     grounded: true,
     facingRight: true,
     walkFrame: 0,
+    isMoving: false,
   });
 
   // Handle resize
@@ -422,7 +423,9 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
       }
 
       // Walk animation
-      if (Math.abs(player.vx) > 0.5 && player.grounded) {
+      const moving = Math.abs(player.vx) > 0.5 && player.grounded;
+      player.isMoving = moving;
+      if (moving) {
         walkTimer.current += deltaTime;
         if (walkTimer.current > 100) {
           player.walkFrame = (player.walkFrame + 1) % 4;
@@ -473,8 +476,8 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
 
       // Only trigger React re-render when visual state actually changes
       const pv = prevVisualsRef.current;
-      if (player.walkFrame !== pv.walkFrame || player.facingRight !== pv.facingRight || player.grounded !== pv.grounded) {
-        prevVisualsRef.current = { walkFrame: player.walkFrame, facingRight: player.facingRight, grounded: player.grounded };
+      if (player.walkFrame !== pv.walkFrame || player.facingRight !== pv.facingRight || player.grounded !== pv.grounded || player.isMoving !== pv.isMoving) {
+        prevVisualsRef.current = { walkFrame: player.walkFrame, facingRight: player.facingRight, grounded: player.grounded, isMoving: player.isMoving };
         setPlayerVisuals({ ...prevVisualsRef.current });
       }
     },
@@ -567,6 +570,7 @@ export function ImmersiveHeroSceneWithGame({ onGameStart }: ImmersiveHeroSceneWi
         <CharacterSprite
           walkFrame={playerVisuals.walkFrame}
           facingRight={playerVisuals.facingRight}
+          isMoving={playerVisuals.isMoving}
         />
       </div>
 
@@ -691,63 +695,127 @@ function GrassDetails({ worldWidth }: { worldWidth: number }) {
   );
 }
 
-// Character SVG sprite — only re-renders when walkFrame or facingRight changes
-const CharacterSprite = memo(function CharacterSprite({ walkFrame, facingRight }: { walkFrame: number; facingRight: boolean }) {
-  const legOffsets = [
-    { left: 0, right: 0 },
-    { left: -1, right: 1 },
-    { left: 0, right: 0 },
-    { left: 1, right: -1 },
-  ];
-  const offset = legOffsets[walkFrame] || legOffsets[0];
+// Character SVG sprite — RPG adventurer with pointed cap + cape
+// Front-facing when idle, side-profile when walking
+const CharacterSprite = memo(function CharacterSprite({ walkFrame, facingRight, isMoving }: { walkFrame: number; facingRight: boolean; isMoving: boolean }) {
+  const isWalking = isMoving;
 
+  if (isWalking) {
+    // Side-profile walking sprite (drawn facing right; parent scaleX flips for left)
+    const legOffsets = [
+      { front: 0, back: 0 },
+      { front: 1, back: -1 },
+      { front: 0, back: 0 },
+      { front: -1, back: 1 },
+    ];
+    const offset = legOffsets[walkFrame] || legOffsets[0];
+    // Cape flutter tied to walk frame
+    const capeFlutter = walkFrame % 2 === 0 ? 0 : -1;
+
+    return (
+      <svg width="64" height="80" viewBox="0 0 16 20" style={{ imageRendering: "pixelated", display: "block" }}>
+        {/* Shadow */}
+        <ellipse cx="8" cy="19" rx="5" ry="1.5" fill={colors.groundDark} opacity="0.4" />
+        {/* Cape flowing behind */}
+        <rect x={3 + capeFlutter} y="5" width="3" height="8" fill="#2A9D8F" />
+        <rect x={2 + capeFlutter} y="7" width="2" height="7" fill="#22857A" />
+        {/* Pointed cap */}
+        <rect x="7" y="0" width="3" height="1" fill={colors.char1} />
+        <rect x="6" y="1" width="5" height="1" fill={colors.char1} />
+        <rect x="5" y="2" width="6" height="1" fill={colors.charDark} />
+        {/* Cap tail */}
+        <rect x="4" y="1" width="2" height="1" fill={colors.char2} />
+        <rect x="3" y="2" width="2" height="1" fill={colors.char2} />
+        {/* Head (profile facing right) */}
+        <rect x="6" y="3" width="4" height="5" fill="#FFD5B8" />
+        <rect x="10" y="3" width="1" height="4" fill="#FFD5B8" />
+        {/* Hair at back */}
+        <rect x="5" y="3" width="1" height="3" fill="#8B4513" />
+        {/* Eye */}
+        <rect x="9" y="4" width="2" height="2" fill="#2D3748" />
+        <rect x="9" y="4" width="1" height="1" fill="#FFFFFF" />
+        {/* Nose */}
+        <rect x="11" y="5" width="1" height="1" fill="#E8A088" />
+        {/* Mouth */}
+        <rect x="9" y="7" width="2" height="1" fill="#E8A088" />
+        {/* Ear */}
+        <rect x="5" y="5" width="1" height="2" fill="#F5C9A8" />
+        {/* Tunic body */}
+        <rect x="5" y="8" width="5" height="6" fill={colors.char1} />
+        <rect x="6" y="8" width="4" height="1" fill={colors.char2} />
+        {/* Arm (front, swings with walk) */}
+        <rect x={10 + offset.front} y="9" width="2" height="4" fill={colors.char1} />
+        <rect x={10 + offset.front} y="12" width="2" height="1" fill="#FFD5B8" />
+        {/* Belt */}
+        <rect x="5" y="13" width="5" height="1" fill="#8B7355" />
+        <rect x="7" y="13" width="2" height="1" fill="#D4AF37" />
+        {/* Legs */}
+        <g transform={`translate(${offset.front}, 0)`}>
+          <rect x="8" y="14" width="3" height="4" fill="#4A5568" />
+          <rect x="8" y="17" width="3" height="2" fill="#6B3A1F" />
+          <rect x="8" y="17" width="3" height="1" fill="#8B4F2E" />
+        </g>
+        <g transform={`translate(${offset.back}, 0)`}>
+          <rect x="5" y="14" width="3" height="4" fill="#4A5568" />
+          <rect x="5" y="17" width="3" height="2" fill="#6B3A1F" />
+          <rect x="5" y="17" width="3" height="1" fill="#8B4F2E" />
+        </g>
+      </svg>
+    );
+  }
+
+  // Front-facing idle sprite — RPG adventurer
   return (
-    <svg
-      width="64"
-      height="80"
-      viewBox="0 0 16 20"
-      style={{ imageRendering: "pixelated", display: "block" }}
-    >
+    <svg width="64" height="80" viewBox="0 0 16 20" style={{ imageRendering: "pixelated", display: "block" }}>
+      {/* Shadow */}
       <ellipse cx="8" cy="19" rx="5" ry="1.5" fill={colors.groundDark} opacity="0.4" />
-      <rect x="4" y="0" width="8" height="2" fill="#5D4E37" />
-      <rect x="3" y="1" width="2" height="2" fill="#5D4E37" />
-      <rect x="11" y="1" width="2" height="2" fill="#5D4E37" />
-      <rect x="5" y="0" width="2" height="1" fill="#6B5B45" />
-      <rect x="9" y="0" width="2" height="1" fill="#6B5B45" />
-      <rect x="4" y="2" width="8" height="7" fill="#FFD5B8" />
-      <rect x="3" y="3" width="1" height="5" fill="#FFD5B8" />
-      <rect x="12" y="3" width="1" height="5" fill="#FFD5B8" />
-      <rect x="4" y="2" width="3" height="2" fill="#5D4E37" />
-      <rect x="9" y="2" width="3" height="2" fill="#5D4E37" />
-      <rect x="6" y="2" width="4" height="1" fill="#5D4E37" />
+      {/* Cape behind (visible at sides) */}
+      <rect x="2" y="9" width="1" height="6" fill="#2A9D8F" />
+      <rect x="13" y="9" width="1" height="6" fill="#2A9D8F" />
+      {/* Pointed cap */}
+      <rect x="6" y="0" width="4" height="1" fill={colors.char1} />
+      <rect x="5" y="1" width="6" height="1" fill={colors.char1} />
+      <rect x="7" y="0" width="2" height="1" fill={colors.char2} />
+      <rect x="4" y="2" width="8" height="1" fill={colors.charDark} />
+      {/* Hair peeking under cap */}
+      <rect x="3" y="2" width="2" height="2" fill="#8B4513" />
+      <rect x="11" y="2" width="2" height="2" fill="#8B4513" />
+      {/* Face */}
+      <rect x="4" y="3" width="8" height="6" fill="#FFD5B8" />
+      <rect x="3" y="4" width="1" height="4" fill="#FFD5B8" />
+      <rect x="12" y="4" width="1" height="4" fill="#FFD5B8" />
+      {/* Eyes */}
       <rect x="5" y="5" width="2" height="2" fill="#2D3748" />
       <rect x="9" y="5" width="2" height="2" fill="#2D3748" />
       <rect x="5" y="5" width="1" height="1" fill="#FFFFFF" />
       <rect x="9" y="5" width="1" height="1" fill="#FFFFFF" />
-      <rect x="4" y="6" width="1" height="1" fill="#FFB6C1" opacity="0.6" />
-      <rect x="11" y="6" width="1" height="1" fill="#FFB6C1" opacity="0.6" />
+      {/* Blush */}
+      <rect x="4" y="6" width="1" height="1" fill="#FFB6C1" opacity="0.5" />
+      <rect x="11" y="6" width="1" height="1" fill="#FFB6C1" opacity="0.5" />
+      {/* Nose + mouth */}
       <rect x="7" y="7" width="2" height="1" fill="#E8A088" />
-      <rect x="6" y="9" width="4" height="1" fill="#F5C9A8" />
-      <rect x="4" y="10" width="8" height="5" fill={colors.char1} />
-      <rect x="3" y="10" width="1" height="4" fill={colors.char1} />
-      <rect x="12" y="10" width="1" height="4" fill={colors.char1} />
-      <rect x="6" y="10" width="4" height="1" fill={colors.char2} />
-      <rect x="4" y="14" width="8" height="1" fill="#8B7355" />
-      <rect x="7" y="14" width="2" height="1" fill="#D4AF37" />
-      <rect x="2" y="10" width="2" height="4" fill={colors.char1} />
-      <rect x="12" y="10" width="2" height="4" fill={colors.char1} />
-      <rect x="2" y="13" width="2" height="2" fill="#FFD5B8" />
-      <rect x="12" y="13" width="2" height="2" fill="#FFD5B8" />
-      <g transform={`translate(${offset.left}, 0)`}>
-        <rect x="5" y="15" width="3" height="4" fill="#4A5568" />
-        <rect x="4" y="18" width="4" height="2" fill="#5D4E37" />
-        <rect x="4" y="18" width="4" height="1" fill="#6B5B45" />
-      </g>
-      <g transform={`translate(${offset.right}, 0)`}>
-        <rect x="8" y="15" width="3" height="4" fill="#4A5568" />
-        <rect x="8" y="18" width="4" height="2" fill="#5D4E37" />
-        <rect x="8" y="18" width="4" height="1" fill="#6B5B45" />
-      </g>
+      <rect x="6" y="8" width="4" height="1" fill="#F5C9A8" />
+      {/* Tunic body */}
+      <rect x="4" y="9" width="8" height="5" fill={colors.char1} />
+      <rect x="3" y="9" width="1" height="4" fill={colors.char1} />
+      <rect x="12" y="9" width="1" height="4" fill={colors.char1} />
+      <rect x="6" y="9" width="4" height="1" fill={colors.char2} />
+      {/* Arms */}
+      <rect x="2" y="9" width="2" height="4" fill={colors.char1} />
+      <rect x="12" y="9" width="2" height="4" fill={colors.char1} />
+      <rect x="2" y="12" width="2" height="2" fill="#FFD5B8" />
+      <rect x="12" y="12" width="2" height="2" fill="#FFD5B8" />
+      {/* Belt */}
+      <rect x="4" y="13" width="8" height="1" fill="#8B7355" />
+      <rect x="7" y="13" width="2" height="1" fill="#D4AF37" />
+      {/* Legs */}
+      <rect x="5" y="14" width="3" height="4" fill="#4A5568" />
+      <rect x="8" y="14" width="3" height="4" fill="#4A5568" />
+      {/* Boots */}
+      <rect x="4" y="17" width="4" height="2" fill="#6B3A1F" />
+      <rect x="8" y="17" width="4" height="2" fill="#6B3A1F" />
+      <rect x="4" y="17" width="4" height="1" fill="#8B4F2E" />
+      <rect x="8" y="17" width="4" height="1" fill="#8B4F2E" />
     </svg>
   );
 });

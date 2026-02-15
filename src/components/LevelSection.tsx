@@ -23,7 +23,7 @@ export const LevelSection = forwardRef<HTMLElement, LevelSectionProps>(
           ref={ref}
           id={id}
           data-level={id}
-          className={`level-section min-h-screen relative ${className}`}
+          className={`level-section h-[100dvh] sm:min-h-screen relative ${className}`}
         >
           {children}
         </section>

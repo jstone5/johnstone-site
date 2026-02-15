@@ -139,14 +139,7 @@ export function WorldMap({ activeLevel, onLevelClick, visitedLevels }: WorldMapP
         prefersReducedMotion={prefersReducedMotion}
       />
 
-      {/* Mobile World Map */}
-      <MobileWorldMap
-        activeLevel={activeLevel}
-        visitedLevels={visitedLevels}
-        onLocationClick={handleLocationClick}
-        onHover={handleHover}
-        prefersReducedMotion={prefersReducedMotion}
-      />
+      {/* Mobile World Map — hidden; mobile users navigate by scrolling */}
     </>
   );
 }

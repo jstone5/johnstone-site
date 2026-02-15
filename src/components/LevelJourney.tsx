@@ -202,7 +202,7 @@ export function LevelJourney({ featuredPosts = [] }: LevelJourneyProps) {
       <TransitionOverlay isActive={transitionActive} />
       <WorldMap activeLevel={activeLevel} onLevelClick={handleLevelClick} visitedLevels={visitedLevels} />
 
-      <div className="pt-14 lg:pl-48 pb-32 lg:pb-16">
+      <div className="pt-14 lg:pl-48 pb-16">
         <LevelSection
           ref={setSectionRef("spawn")}
           id="spawn"

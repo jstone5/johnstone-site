@@ -36,7 +36,7 @@ export function SpawnLevel() {
   };
 
   return (
-    <div className="relative w-full min-h-screen">
+    <div className="relative w-full h-[100dvh] sm:min-h-screen">
       {/* Immersive background scene with integrated platformer game */}
       <ImmersiveHeroSceneWithGame onGameStart={handleGameProgress} />
 
@@ -77,7 +77,7 @@ export function SpawnLevel() {
 
       {/* Text content panel -- slides off when game starts */}
       <motion.div
-        className="relative z-10 flex items-start sm:items-center justify-start min-h-screen px-3 sm:px-6 lg:px-8 pt-18 sm:py-16 pointer-events-none"
+        className="relative z-10 flex items-start sm:items-center justify-start h-[100dvh] sm:min-h-screen px-3 sm:px-6 lg:px-8 pt-18 sm:py-16 pointer-events-none"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
